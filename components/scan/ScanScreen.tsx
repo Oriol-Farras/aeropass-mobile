@@ -1,39 +1,35 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { CameraType, CameraView, FlashMode, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
     ActivityIndicator,
-    SafeAreaView,
+    Image,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 import { styles } from '@/components/scan/ScanScreen.styles';
+import { useCardDetection } from '@/components/scan/useCardDetection';
 
 export default function ScanScreen() {
     const router = useRouter();
-    const [flashOn, setFlashOn] = useState(false);
-    const [permission, requestPermission] = useCameraPermissions();
-    const cameraRef = useRef<CameraView>(null);
+    const { hasPermission, requestPermission } = useCameraPermission();
+    const cameraRef = useRef<Camera>(null);
 
-    // ── Pantalla de carga de permisos ──
-    if (!permission) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="light-content" backgroundColor="#141414" />
-                <View style={permStyles.center}>
-                    <ActivityIndicator size="large" color="#ffffff" />
-                </View>
-            </SafeAreaView>
-        );
-    }
+    // Obtener la cámara trasera (wide/standard)
+    const device = useCameraDevice('back');
+
+    const { state, capturedUri, takePicture, reset } = useCardDetection({
+        cameraRef,
+    });
 
     // ── Pantalla de solicitud de permisos ──
-    if (!permission.granted) {
+    if (!hasPermission) {
         return (
             <SafeAreaView style={styles.container}>
                 <StatusBar barStyle="light-content" backgroundColor="#141414" />
@@ -41,7 +37,7 @@ export default function ScanScreen() {
                     <MaterialIcons name="camera-alt" size={56} color="rgba(255,255,255,0.4)" />
                     <Text style={permStyles.title}>Camera Access Required</Text>
                     <Text style={permStyles.subtitle}>
-                        AeroPass needs camera access to scan your ID document.
+                        AeroPass needs camera access to scan your ID document at 60 FPS in real-time.
                     </Text>
                     <TouchableOpacity style={permStyles.btn} onPress={requestPermission}>
                         <Text style={permStyles.btnText}>Allow Camera</Text>
@@ -54,7 +50,17 @@ export default function ScanScreen() {
         );
     }
 
-    // ── Pantalla principal con cámara ──
+    // ── Pantalla si no hay dispositivo detectado (Ej. Emuladores o cargando instantes) ──
+    if (device == null) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={permStyles.center}>
+                    <ActivityIndicator size="large" color="#ffffff" />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#141414" />
@@ -69,47 +75,50 @@ export default function ScanScreen() {
                     <Text style={styles.titlePillText}>AEROPASS ID CHECK</Text>
                 </View>
 
-                <TouchableOpacity style={styles.iconButton} onPress={() => setFlashOn(v => !v)}>
-                    <MaterialIcons
-                        name={flashOn ? 'flash-on' : 'flash-off'}
-                        size={20}
-                        color="#ffffff"
-                    />
-                </TouchableOpacity>
+                {/* El toggle manual de flash ahora es opcional.
+                    Por simplificar la migration V4, lo ocultamos 
+                    ya que "takePhoto" en silencio prefiere flash off */}
+                <View style={[styles.iconButton, { opacity: 0 }]} />
             </View>
 
             {/* ── HERO TEXT ── */}
             <View style={styles.heroSection}>
                 <Text style={styles.heroTitle}>Scan Document</Text>
                 <Text style={styles.heroSubtitle}>
-                    Align the back of your ID card. Ensure the{'\n'}MRZ code (the {'<<<'} lines) is visible.
+                    Align the back of your ID card. Ensure the{'\n'}PDF417 or QR code is visible.
                 </Text>
             </View>
 
-            {/* ── VIEWFINDER con cámara real ── */}
+            {/* ── VIEWFINDER con react-native-vision-camera ── */}
             <View style={styles.viewfinderWrapper}>
                 <View style={styles.viewfinder}>
 
-                    {/* Cámara real */}
-                    <CameraView
-                        ref={cameraRef}
-                        style={StyleSheet.absoluteFillObject}
-                        facing={'back' as CameraType}
-                        flash={flashOn ? 'on' as FlashMode : 'off' as FlashMode}
-                    // En el futuro: onCameraReady, onBarcodeScanned, etc.
-                    />
+                    {/* Cámara real silenciosa a 60fps */}
+                    {capturedUri ? (
+                        <Image source={{ uri: capturedUri }} style={StyleSheet.absoluteFillObject} />
+                    ) : (
+                        <Camera
+                            ref={cameraRef}
+                            style={StyleSheet.absoluteFillObject}
+                            device={device}
+                            isActive={state !== 'captured'}
+                            photo={true} // Necesario para takePhoto
+                        />
+                    )}
 
                     {/* Marco de encuadre encima de la cámara */}
-                    <View style={[styles.corner, styles.cornerTL]} />
-                    <View style={[styles.corner, styles.cornerTR]} />
-                    <View style={[styles.corner, styles.cornerBL]} />
-                    <View style={[styles.corner, styles.cornerBR]} />
+                    <View style={[styles.corner, styles.cornerTL, state === 'detected' && { borderColor: '#22c55e' }]} />
+                    <View style={[styles.corner, styles.cornerTR, state === 'detected' && { borderColor: '#22c55e' }]} />
+                    <View style={[styles.corner, styles.cornerBL, state === 'detected' && { borderColor: '#22c55e' }]} />
+                    <View style={[styles.corner, styles.cornerBR, state === 'detected' && { borderColor: '#22c55e' }]} />
                 </View>
 
                 {/* Status pill */}
                 <View style={styles.statusPill}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Looking for document...</Text>
+                    <View style={[styles.statusDot, { backgroundColor: state === 'detected' ? '#22c55e' : (state === 'captured' ? '#3b82f6' : '#eab308') }]} />
+                    <Text style={styles.statusText}>
+                        {state === 'detected' ? 'Ready to capture' : (state === 'captured' ? 'Photo captured!' : 'Looking for document...')}
+                    </Text>
                 </View>
             </View>
 
@@ -124,19 +133,23 @@ export default function ScanScreen() {
                         <Text style={styles.bottomActionLabel}>GALLERY</Text>
                     </TouchableOpacity>
 
-                    {/* Capture */}
+                    {/* Capture. Se ilumina en verde cuando la tarjeta es enmarcada */}
                     <TouchableOpacity
-                        style={styles.captureButton}
+                        style={[styles.captureButton, state === 'detected' && { borderColor: '#22c55e' }]}
                         activeOpacity={0.85}
                         onPress={async () => {
-                            // TODO: capturar foto y procesar MRZ
-                            if (cameraRef.current) {
-                                const photo = await cameraRef.current.takePictureAsync();
-                                console.log('Photo captured:', photo?.uri);
+                            if (state === 'captured') {
+                                reset();
+                            } else {
+                                await takePicture();
                             }
                         }}
                     >
-                        <View style={styles.captureInner} />
+                        {state === 'captured' ? (
+                            <MaterialIcons name="refresh" size={32} color="#000000" />
+                        ) : (
+                            <View style={[styles.captureInner, state === 'detected' && { backgroundColor: '#22c55e' }]} />
+                        )}
                     </TouchableOpacity>
 
                     {/* Manual */}
