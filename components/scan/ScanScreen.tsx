@@ -1,31 +1,74 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { CameraType, CameraView, FlashMode, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 import { styles } from '@/components/scan/ScanScreen.styles';
 
 export default function ScanScreen() {
     const router = useRouter();
     const [flashOn, setFlashOn] = useState(false);
+    const [permission, requestPermission] = useCameraPermissions();
+    const cameraRef = useRef<CameraView>(null);
 
+    // ── Pantalla de carga de permisos ──
+    if (!permission) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="light-content" backgroundColor="#141414" />
+                <View style={permStyles.center}>
+                    <ActivityIndicator size="large" color="#ffffff" />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    // ── Pantalla de solicitud de permisos ──
+    if (!permission.granted) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="light-content" backgroundColor="#141414" />
+                <View style={permStyles.center}>
+                    <MaterialIcons name="camera-alt" size={56} color="rgba(255,255,255,0.4)" />
+                    <Text style={permStyles.title}>Camera Access Required</Text>
+                    <Text style={permStyles.subtitle}>
+                        AeroPass needs camera access to scan your ID document.
+                    </Text>
+                    <TouchableOpacity style={permStyles.btn} onPress={requestPermission}>
+                        <Text style={permStyles.btnText}>Allow Camera</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <Text style={permStyles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    // ── Pantalla principal con cámara ──
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#141414" />
 
             {/* ── TOP BAR ── */}
             <View style={styles.topBar}>
-                {/* Cerrar */}
                 <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
                     <MaterialIcons name="close" size={20} color="#ffffff" />
                 </TouchableOpacity>
 
-                {/* Título */}
                 <View style={styles.titlePill}>
                     <Text style={styles.titlePillText}>AEROPASS ID CHECK</Text>
                 </View>
 
-                {/* Flash */}
                 <TouchableOpacity style={styles.iconButton} onPress={() => setFlashOn(v => !v)}>
                     <MaterialIcons
                         name={flashOn ? 'flash-on' : 'flash-off'}
@@ -43,18 +86,20 @@ export default function ScanScreen() {
                 </Text>
             </View>
 
-            {/* ── VIEWFINDER ── */}
+            {/* ── VIEWFINDER con cámara real ── */}
             <View style={styles.viewfinderWrapper}>
                 <View style={styles.viewfinder}>
-                    {/* Placeholder cámara */}
-                    <MaterialIcons
-                        name="contact-page"
-                        size={64}
-                        color="rgba(255,255,255,0.3)"
-                        style={styles.placeholderIcon}
+
+                    {/* Cámara real */}
+                    <CameraView
+                        ref={cameraRef}
+                        style={StyleSheet.absoluteFillObject}
+                        facing={'back' as CameraType}
+                        flash={flashOn ? 'on' as FlashMode : 'off' as FlashMode}
+                    // En el futuro: onCameraReady, onBarcodeScanned, etc.
                     />
 
-                    {/* Esquinas del marco */}
+                    {/* Marco de encuadre encima de la cámara */}
                     <View style={[styles.corner, styles.cornerTL]} />
                     <View style={[styles.corner, styles.cornerTR]} />
                     <View style={[styles.corner, styles.cornerBL]} />
@@ -80,7 +125,17 @@ export default function ScanScreen() {
                     </TouchableOpacity>
 
                     {/* Capture */}
-                    <TouchableOpacity style={styles.captureButton} activeOpacity={0.85}>
+                    <TouchableOpacity
+                        style={styles.captureButton}
+                        activeOpacity={0.85}
+                        onPress={async () => {
+                            // TODO: capturar foto y procesar MRZ
+                            if (cameraRef.current) {
+                                const photo = await cameraRef.current.takePictureAsync();
+                                console.log('Photo captured:', photo?.uri);
+                            }
+                        }}
+                    >
                         <View style={styles.captureInner} />
                     </TouchableOpacity>
 
@@ -98,3 +153,46 @@ export default function ScanScreen() {
         </SafeAreaView>
     );
 }
+
+// Estilos solo para las pantallas de permisos
+const permStyles = StyleSheet.create({
+    center: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+        gap: 16,
+    },
+    title: {
+        color: '#ffffff',
+        fontSize: 22,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginTop: 8,
+    },
+    subtitle: {
+        color: 'rgba(255,255,255,0.55)',
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+    btn: {
+        marginTop: 8,
+        backgroundColor: '#ffffff',
+        paddingHorizontal: 32,
+        paddingVertical: 14,
+        borderRadius: 14,
+        width: '100%',
+        alignItems: 'center',
+    },
+    btnText: {
+        color: '#000000',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    cancelText: {
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: 14,
+        marginTop: 4,
+    },
+});

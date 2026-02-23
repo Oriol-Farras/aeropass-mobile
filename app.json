@@ -14,7 +14,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "AeroPass needs camera access to scan your ID document."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +34,13 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-nfc-manager"
+      "react-native-nfc-manager",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "AeroPass needs camera access to scan your ID document."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
