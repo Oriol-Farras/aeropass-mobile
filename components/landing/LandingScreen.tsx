@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 
@@ -6,6 +7,7 @@ import { FingerprintIllustration } from '@/components/landing/FingerprintIllustr
 import { styles } from '@/components/landing/LandingScreen.styles';
 
 export default function LandingScreen() {
+    const router = useRouter();
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -33,7 +35,7 @@ export default function LandingScreen() {
             <View style={styles.bottom}>
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    onPress={() => { }}
+                    onPress={() => router.push('/scan')}
                     style={styles.primaryButton}
                 >
                     <Text style={styles.buttonText}>Start Identity Verification</Text>

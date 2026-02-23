@@ -37,7 +37,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
-      
+
       // 3. Inicializamos el hardware de NFC al arrancar (TEMPORALMENTE COMENTADO)
       // NfcManager.start().catch((err) => {
       //   console.warn("NFC no disponible en este dispositivo", err);
@@ -60,6 +60,7 @@ function RootLayoutNav() {
       <Stack>
         {/* Aquí defines tus rutas principales */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="scan" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
