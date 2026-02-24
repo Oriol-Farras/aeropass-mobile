@@ -61,7 +61,7 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
             const mean = sum / sample.length;
             const variance = sumSq / sample.length - mean * mean;
 
-            console.log(`[CardDetection] Varianza real del centro: ${variance.toFixed(2)}`);
+            //console.log(`[CardDetection] Varianza real del centro: ${variance.toFixed(2)}`);
 
             // Un valor que fluctúe por encima de 500 indicará detalles en el centro (como el texto de un DNI)
             return variance >= 460;
