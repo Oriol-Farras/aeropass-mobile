@@ -31,7 +31,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
         if (!cameraRef.current) return false;
 
         try {
-            // Toma foto a baja resolución (si es posible) SIN SONIDO
             const photo = await cameraRef.current.takePhoto({
                 flash: 'off',
                 enableShutterSound: false,
@@ -40,7 +39,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
             if (!photo?.path) return false;
             const uri = `file://${photo.path}`;
 
-            // Minimizar y extraer bytes B64 ultrarrápido
             const thumb = await manipulateAsync(
                 uri,
                 [{ resize: { width: 100 } }],
@@ -49,7 +47,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
 
             if (!thumb.base64) return false;
 
-            // Extraemos los bytes del centro de la imagen (evitando la cabecera del JPEG)
             const mid = Math.floor(thumb.base64.length / 2);
             const sample = thumb.base64.slice(mid, mid + 500);
 
@@ -61,9 +58,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
             const mean = sum / sample.length;
             const variance = sumSq / sample.length - mean * mean;
 
-            //console.log(`[CardDetection] Varianza real del centro: ${variance.toFixed(2)}`);
-
-            // Un valor que fluctúe por encima de 500 indicará detalles en el centro (como el texto de un DNI)
             return variance >= 460;
 
         } catch (e) {
@@ -75,7 +69,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
     useEffect(() => {
         if ((state as string) === 'captured') return;
 
-        // Comprueba silenciosamente 4 veces por segundo (cada 250ms) para que el apagado sea inmediato
         intervalRef.current = setInterval(async () => {
             if (isAnalyzing.current || (state as string) === 'captured') return;
             isAnalyzing.current = true;
@@ -88,7 +81,6 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
                     setState('detected');
                 }
             } else {
-                // Si justo quitamos el DNI, vuelve a searching super rápido
                 consecutiveHits.current = 0;
                 setState(prev => prev === 'detected' ? 'searching' : prev);
             }
@@ -106,7 +98,7 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
         try {
             const photo = await cameraRef.current.takePhoto({
                 flash: 'off',
-                enableShutterSound: false, // Captura final también muda (si el móvil lo permite)
+                enableShutterSound: false,
             });
             if (photo?.path) {
                 setCapturedUri(`file://${photo.path}`);

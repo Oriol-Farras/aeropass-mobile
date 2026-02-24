@@ -171,3 +171,45 @@ export const styles = StyleSheet.create({
         fontWeight: '400',
     },
 });
+
+export const permStyles = StyleSheet.create({
+    center: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+        gap: 16,
+    },
+    title: {
+        color: '#ffffff',
+        fontSize: 22,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginTop: 8,
+    },
+    subtitle: {
+        color: 'rgba(255,255,255,0.55)',
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+    btn: {
+        marginTop: 8,
+        backgroundColor: '#ffffff',
+        paddingHorizontal: 32,
+        paddingVertical: 14,
+        borderRadius: 14,
+        width: '100%',
+        alignItems: 'center',
+    },
+    btnText: {
+        color: '#000000',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    cancelText: {
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: 14,
+        marginTop: 4,
+    },
+});
