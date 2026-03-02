@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useRef } from 'react';
 import { Alert, Animated } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import TextRecognition from '@react-native-ml-kit/text-recognition';
 
 import { useCardDetection } from '@/components/scan/useCardDetection';
 
@@ -16,7 +17,14 @@ export function useScanScreen() {
     const [compressedKB, setCompressedKB] = React.useState<number>(-1);
 
     // OCR Results
-    const [detectedDNI, setDetectedDNI] = React.useState<{ number: string } | null>(null);
+    const [detectedDNI, setDetectedDNI] = React.useState<{
+        number: string;
+        name: string | null;
+        surname1: string | null;
+        surname2: string | null;
+        dob: string | null;
+        photo: string | null;
+    } | null>(null);
 
     const isOcrActive = React.useRef(false);
 
@@ -103,31 +111,81 @@ export function useScanScreen() {
                     const sizeKB = fileInfo.exists ? Math.round((fileInfo as any).size / 1024) : -1;
                     setCompressedKB(sizeKB);
 
-                    const formData = new FormData();
-                    formData.append('file', {
-                        uri: compressed.uri,
-                        name: 'DNI.jpg',
-                        type: 'image/jpeg',
-                    } as any);
+                    // ── Local OCR via Google ML Kit (on-device, no backend) ──
+                    const recognized = await TextRecognition.recognize(compressed.uri);
 
-                    const response = await fetch(
-                        `${BACKEND_URL}/process-dni`,
-                        {
-                            method: 'POST',
-                            headers: { accept: 'application/json' },
-                            body: formData,
-                            signal: controller.signal,
+                    // Split full text into lines for field parsing
+                    const lines = recognized.text
+                        .split('\n')
+                        .map((l: string) => l.trim())
+                        .filter((l: string) => l.length > 0);
+
+                    const upper = lines.map((l: string) => l.toUpperCase());
+
+                    const LABEL_WORDS = [
+                        'APELLIDO', 'COGNOM', 'NOMBRE', 'NOM', 'SEXO', 'SEXE',
+                        'NACIONAL', 'FECHA', 'NACIMIENTO', 'NAIXEMENT', 'REINO',
+                        'ESPAÑA', 'IDENTIDAD', 'DOCUMENTO', 'NUMERO', 'VALIDEZ',
+                        'SOPORTE', 'EMISION', 'NATIONAL', 'DOCUMENT',
+                    ];
+                    const isLabel = (s: string) =>
+                        LABEL_WORDS.some(kw => s.includes(kw)) || s.includes('/') || s.length < 2;
+
+                    const nextValues = (labelKw: string, count = 1): string[] => {
+                        const idx = upper.findIndex((l: string) => l.includes(labelKw));
+                        if (idx < 0) return [];
+                        const results: string[] = [];
+                        for (let j = idx + 1; j < upper.length && results.length < count; j++) {
+                            if (isLabel(upper[j])) {
+                                if (results.length > 0) break;
+                                continue;
+                            }
+                            results.push(lines[j].trim());
                         }
-                    );
+                        return results;
+                    };
 
-                    const data = await response.json();
+                    const toTitleCase = (s: string) =>
+                        s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-                    if (data.is_dni) {
-                        setDetectedDNI({ number: data.dni_number });
-                    } else {
-                        Alert.alert('Error', data.message || 'No parece ser un DNI válido');
-                        reset();
+                    // DNI number: strip non-alphanumeric, search for 8 digits + letter
+                    const fullCompact = upper.join('').replace(/[^A-Z0-9]/g, '');
+                    const dniMatch = fullCompact.match(/(\d{8}[A-Z])/);
+                    const dniNumber = dniMatch ? dniMatch[1] : '—';
+
+                    // DOB: find line nearest to NACIMIENTO / NAIXEMENT label
+                    // (avoids picking up the EMISION date which appears first)
+                    const dobIdx = upper.findIndex(l => l.includes('NACIM') || l.includes('NAIX'));
+                    const DATE_REGEX = /(\d{2})[\s\/\-](\d{2})[\s\/\-](\d{4})/;
+                    let dob = '—';
+                    if (dobIdx >= 0) {
+                        // Check the label line itself and the next 3 lines for a date
+                        for (let k = dobIdx; k <= Math.min(dobIdx + 3, lines.length - 1); k++) {
+                            const m = lines[k].match(DATE_REGEX);
+                            if (m) { dob = `${m[1]}/${m[2]}/${m[3]}`; break; }
+                        }
                     }
+                    // Fallback: last date found in the text (safer than first, avoids EMISION)
+                    if (dob === '—') {
+                        const allDates = [...lines.join(' ').matchAll(/(\d{2})[\s\/\-](\d{2})[\s\/\-](\d{4})/g)];
+                        if (allDates.length > 0) {
+                            const last = allDates[allDates.length - 1];
+                            dob = `${last[1]}/${last[2]}/${last[3]}`;
+                        }
+                    }
+
+                    // Name & surnames from bilingual labels
+                    const surnameLines = nextValues('APELLIDO', 2);
+                    const nameLines = nextValues('NOMBRE', 1);
+
+                    setDetectedDNI({
+                        number: dniNumber,
+                        name: nameLines[0] ? toTitleCase(nameLines[0]) : '—',
+                        surname1: surnameLines[0] ? toTitleCase(surnameLines[0]) : '—',
+                        surname2: surnameLines[1] ? toTitleCase(surnameLines[1]) : null,
+                        dob,
+                        photo: null,  // foto: requiere backend
+                    });
                 } catch (error: any) {
                     if (error?.name === 'AbortError') {
                         Alert.alert('Tiempo agotado', 'El servidor tardó demasiado. Inténtalo de nuevo.');

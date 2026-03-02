@@ -70,101 +70,116 @@ export default function ScanScreen() {
 
     // ── PANTALLA DE RESULTADO (DNI DETECTADO) ──
     if (detectedDNI) {
+        const fullName = [detectedDNI.surname1, detectedDNI.surname2].filter(Boolean).join(' ');
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: '#ffffff', justifyContent: 'space-between' }]}>
-                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+                <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
 
-                {/* Header (Back button styled as in the reference image) */}
-                <View style={[styles.topBar, { paddingTop: 24 }]}>
+                {/* Header */}
+                <View style={[styles.topBar, { paddingTop: 16, backgroundColor: '#f8f9fa' }]}>
                     <TouchableOpacity onPress={() => setDetectedDNI(null)} style={{ padding: 8 }}>
-                        <MaterialIcons name="arrow-back" size={28} color="#000000" />
+                        <MaterialIcons name="arrow-back" size={26} color="#000000" />
                     </TouchableOpacity>
-                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 16, color: '#888', fontWeight: 'bold' }}>?</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', letterSpacing: 1.2 }}>
+                        AEROPASS ID CHECK
+                    </Text>
+                    <View style={{ width: 40 }} />
+                </View>
+
+                {/* Status pill */}
+                <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 24 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#dcfce7', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
+                        <MaterialIcons name="check-circle" size={15} color="#16a34a" />
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#16a34a', letterSpacing: 0.5 }}>IDENTIDAD VERIFICADA</Text>
                     </View>
                 </View>
 
-                {/* Hero / ID Verification graphic */}
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
-
-                    {/* The faux card visual */}
-                    <View style={{
-                        width: '100%',
-                        aspectRatio: 1,
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: 40,
-                        borderWidth: 1,
-                        borderColor: '#e5e7eb',
-                        overflow: 'hidden',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 48,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 10 },
-                        shadowOpacity: 0.05,
-                        shadowRadius: 20,
-                    }}>
-                        {/* Faux border brackets like the reference */}
-                        <View style={{ position: 'absolute', top: 20, left: 20, width: 20, height: 20, borderTopWidth: 2, borderLeftWidth: 2, borderColor: '#000', borderRadius: 4 }} />
-                        <View style={{ position: 'absolute', top: 20, right: 20, width: 20, height: 20, borderTopWidth: 2, borderRightWidth: 2, borderColor: '#000', borderRadius: 4 }} />
-                        <View style={{ position: 'absolute', bottom: 20, left: 20, width: 20, height: 20, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: '#000', borderRadius: 4 }} />
-                        <View style={{ position: 'absolute', bottom: 20, right: 20, width: 20, height: 20, borderBottomWidth: 2, borderRightWidth: 2, borderColor: '#000', borderRadius: 4 }} />
-
-                        <MaterialIcons name="fact-check" size={80} color="#22c55e" />
+                {/* DNI Card */}
+                <View style={{
+                    marginHorizontal: 20,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 20,
+                    padding: 20,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 16,
+                    elevation: 4,
+                }}>
+                    {/* Card header stripe */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' }} />
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fbbf24' }} />
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' }} />
+                        <Text style={{ marginLeft: 8, fontSize: 11, fontWeight: '700', color: '#9ca3af', letterSpacing: 1 }}>DOCUMENTO NACIONAL DE IDENTIDAD</Text>
                     </View>
 
-                    {/* Typography */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#000' }} />
-                        <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 1.5, color: '#555' }}>
-                            VERIFIED
+                    {/* Main content row: photo + fields */}
+                    <View style={{ flexDirection: 'row', gap: 16 }}>
+
+                        {/* Face photo */}
+                        <View style={{
+                            width: 100,
+                            height: 130,
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            backgroundColor: '#f3f4f6',
+                            borderWidth: 1,
+                            borderColor: '#e5e7eb',
+                        }}>
+                            {detectedDNI.photo ? (
+                                <Image
+                                    source={{ uri: detectedDNI.photo }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                                    <MaterialIcons name="person" size={48} color="#d1d5db" />
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Text fields */}
+                        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                            <Field label="APELLIDOS" value={fullName || '—'} />
+                            <Field label="NOMBRE" value={detectedDNI.name || '—'} />
+                            <Field label="FECHA DE NACIMIENTO" value={detectedDNI.dob || '—'} />
+                        </View>
+                    </View>
+
+                    {/* DNI number banner */}
+                    <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#9ca3af', letterSpacing: 1, marginBottom: 4 }}>NÚMERO DE DOCUMENTO</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '900', color: '#111', letterSpacing: 3 }}>
+                            {detectedDNI.number}
                         </Text>
                     </View>
-
-                    <Text style={{ fontSize: 26, fontWeight: '800', color: '#000000', marginBottom: 12, textAlign: 'center' }}>
-                        ID Document Extracted
-                    </Text>
-
-                    <Text style={{ fontSize: 42, fontWeight: '900', color: '#000000', textAlign: 'center', letterSpacing: 2 }}>
-                        {detectedDNI.number}
-                    </Text>
-
-                    <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 16, paddingHorizontal: 20, lineHeight: 22 }}>
-                        Please ensure the extracted DNI number matches the physical document exactly.
-                    </Text>
                 </View>
 
-                {/* Footer Buttons */}
-                <View style={{ paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center' }}>
+                {/* Footer */}
+                <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center', gap: 12 }}>
                     <TouchableOpacity
-                        style={{ paddingVertical: 16, width: '100%', alignItems: 'center', marginBottom: 12 }}
-                        onPress={() => setDetectedDNI(null)} // basically rescan
-                    >
-                        <Text style={{ fontSize: 16, color: '#000', fontWeight: '500' }}>Cancel Scan</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 8,
-                            backgroundColor: '#f4f4f5',
-                            paddingHorizontal: 24,
-                            paddingVertical: 14,
-                            borderRadius: 24
-                        }}
+                        style={{ backgroundColor: '#111', paddingVertical: 16, borderRadius: 16, width: '100%', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
                         onPress={onAcceptDni}
                     >
-                        <MaterialIcons name="lock" size={14} color="#71717a" />
-                        <Text style={{ fontSize: 12, color: '#71717a', fontWeight: '600', letterSpacing: 0.5 }}>
-                            CONFIRM & CONTINUE
-                        </Text>
+                        <MaterialIcons name="check" size={18} color="#ffffff" />
+                        <Text style={{ fontSize: 16, color: '#ffffff', fontWeight: '700' }}>Confirmar y continuar</Text>
                     </TouchableOpacity>
-                </View>
 
+                    <TouchableOpacity onPress={() => setDetectedDNI(null)}>
+                        <Text style={{ fontSize: 14, color: '#6b7280', fontWeight: '500' }}>Cancelar y volver a escanear</Text>
+                    </TouchableOpacity>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <MaterialIcons name="lock" size={12} color="#d1d5db" />
+                        <Text style={{ fontSize: 11, color: '#d1d5db', letterSpacing: 0.5 }}>ENCRYPTED & ON-DEVICE</Text>
+                    </View>
+                </View>
             </SafeAreaView>
         );
     }
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -302,5 +317,15 @@ export default function ScanScreen() {
                 <Text style={styles.poweredBy}>Powered by AeroPass Secure OCR</Text>
             </View>
         </SafeAreaView>
+    );
+}
+
+// Small helper: a label + value pair for the DNI card
+function Field({ label, value }: { label: string; value: string }) {
+    return (
+        <View style={{ marginBottom: 8 }}>
+            <Text style={{ fontSize: 9, fontWeight: '700', color: '#9ca3af', letterSpacing: 0.8 }}>{label}</Text>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginTop: 2 }} numberOfLines={1}>{value}</Text>
+        </View>
     );
 }
