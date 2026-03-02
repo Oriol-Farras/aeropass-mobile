@@ -14,6 +14,10 @@ export function useScanScreen() {
     const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
     const [compressedUri, setCompressedUri] = React.useState<string | null>(null);
     const [compressedKB, setCompressedKB] = React.useState<number>(-1);
+
+    // OCR Results
+    const [detectedDNI, setDetectedDNI] = React.useState<{ number: string } | null>(null);
+
     const isOcrActive = React.useRef(false);
 
     const progressAnim = useRef(new Animated.Value(0)).current;
@@ -119,7 +123,7 @@ export function useScanScreen() {
                     const data = await response.json();
 
                     if (data.is_dni) {
-                        Alert.alert('DNI Detectado', `Nº DNI: ${data.dni_number}`);
+                        setDetectedDNI({ number: data.dni_number });
                     } else {
                         Alert.alert('Error', data.message || 'No parece ser un DNI válido');
                         reset();
@@ -142,6 +146,13 @@ export function useScanScreen() {
         }
     }, [state, capturedUri]);
 
+    const onAcceptDni = () => {
+        // En el futuro, aquí enrutaremos a la pantalla final. Por ahora, limpiamos y reseteamos.
+        setDetectedDNI(null);
+        reset();
+        // router.push('/home'); // Por ejemplo
+    };
+
     return {
         router,
         hasPermission,
@@ -157,5 +168,8 @@ export function useScanScreen() {
         capturedUri,
         takePicture,
         reset,
+        detectedDNI,
+        setDetectedDNI,
+        onAcceptDni,
     };
 }

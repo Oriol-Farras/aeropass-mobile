@@ -32,6 +32,9 @@ export default function ScanScreen() {
         capturedUri,
         takePicture,
         reset,
+        detectedDNI,
+        setDetectedDNI,
+        onAcceptDni,
     } = useScanScreen();
 
     if (!hasPermission) {
@@ -61,6 +64,104 @@ export default function ScanScreen() {
                 <View style={permStyles.center}>
                     <ActivityIndicator size="large" color="#ffffff" />
                 </View>
+            </SafeAreaView>
+        );
+    }
+
+    // ── PANTALLA DE RESULTADO (DNI DETECTADO) ──
+    if (detectedDNI) {
+        return (
+            <SafeAreaView style={[styles.container, { backgroundColor: '#ffffff', justifyContent: 'space-between' }]}>
+                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+
+                {/* Header (Back button styled as in the reference image) */}
+                <View style={[styles.topBar, { paddingTop: 24 }]}>
+                    <TouchableOpacity onPress={() => setDetectedDNI(null)} style={{ padding: 8 }}>
+                        <MaterialIcons name="arrow-back" size={28} color="#000000" />
+                    </TouchableOpacity>
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 16, color: '#888', fontWeight: 'bold' }}>?</Text>
+                    </View>
+                </View>
+
+                {/* Hero / ID Verification graphic */}
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
+
+                    {/* The faux card visual */}
+                    <View style={{
+                        width: '100%',
+                        aspectRatio: 1,
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: 40,
+                        borderWidth: 1,
+                        borderColor: '#e5e7eb',
+                        overflow: 'hidden',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 48,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 20,
+                    }}>
+                        {/* Faux border brackets like the reference */}
+                        <View style={{ position: 'absolute', top: 20, left: 20, width: 20, height: 20, borderTopWidth: 2, borderLeftWidth: 2, borderColor: '#000', borderRadius: 4 }} />
+                        <View style={{ position: 'absolute', top: 20, right: 20, width: 20, height: 20, borderTopWidth: 2, borderRightWidth: 2, borderColor: '#000', borderRadius: 4 }} />
+                        <View style={{ position: 'absolute', bottom: 20, left: 20, width: 20, height: 20, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: '#000', borderRadius: 4 }} />
+                        <View style={{ position: 'absolute', bottom: 20, right: 20, width: 20, height: 20, borderBottomWidth: 2, borderRightWidth: 2, borderColor: '#000', borderRadius: 4 }} />
+
+                        <MaterialIcons name="fact-check" size={80} color="#22c55e" />
+                    </View>
+
+                    {/* Typography */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#000' }} />
+                        <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 1.5, color: '#555' }}>
+                            VERIFIED
+                        </Text>
+                    </View>
+
+                    <Text style={{ fontSize: 26, fontWeight: '800', color: '#000000', marginBottom: 12, textAlign: 'center' }}>
+                        ID Document Extracted
+                    </Text>
+
+                    <Text style={{ fontSize: 42, fontWeight: '900', color: '#000000', textAlign: 'center', letterSpacing: 2 }}>
+                        {detectedDNI.number}
+                    </Text>
+
+                    <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 16, paddingHorizontal: 20, lineHeight: 22 }}>
+                        Please ensure the extracted DNI number matches the physical document exactly.
+                    </Text>
+                </View>
+
+                {/* Footer Buttons */}
+                <View style={{ paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center' }}>
+                    <TouchableOpacity
+                        style={{ paddingVertical: 16, width: '100%', alignItems: 'center', marginBottom: 12 }}
+                        onPress={() => setDetectedDNI(null)} // basically rescan
+                    >
+                        <Text style={{ fontSize: 16, color: '#000', fontWeight: '500' }}>Cancel Scan</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 8,
+                            backgroundColor: '#f4f4f5',
+                            paddingHorizontal: 24,
+                            paddingVertical: 14,
+                            borderRadius: 24
+                        }}
+                        onPress={onAcceptDni}
+                    >
+                        <MaterialIcons name="lock" size={14} color="#71717a" />
+                        <Text style={{ fontSize: 12, color: '#71717a', fontWeight: '600', letterSpacing: 0.5 }}>
+                            CONFIRM & CONTINUE
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
             </SafeAreaView>
         );
     }
