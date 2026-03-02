@@ -5,6 +5,8 @@ import React, { useRef } from 'react';
 import { Alert, Animated } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
+import FaceDetection from '@react-native-ml-kit/face-detection';
+import ImageEditor from '@react-native-community/image-editor';
 
 import { useCardDetection } from '@/components/scan/useCardDetection';
 
@@ -111,8 +113,15 @@ export function useScanScreen() {
                     const sizeKB = fileInfo.exists ? Math.round((fileInfo as any).size / 1024) : -1;
                     setCompressedKB(sizeKB);
 
-                    // ── Local OCR via Google ML Kit (on-device, no backend) ──
-                    const recognized = await TextRecognition.recognize(compressed.uri);
+                    // ── Parallel: text OCR + face detection at the same time ──
+                    const [recognized, faces] = await Promise.all([
+                        TextRecognition.recognize(compressed.uri),
+                        FaceDetection.detect(compressed.uri, {
+                            performanceMode: 'fast',
+                            landmarkMode: 'none',
+                            classificationMode: 'none',
+                        }),
+                    ]);
 
                     // Split full text into lines for field parsing
                     const lines = recognized.text
@@ -121,6 +130,47 @@ export function useScanScreen() {
                         .filter((l: string) => l.length > 0);
 
                     const upper = lines.map((l: string) => l.toUpperCase());
+
+                    // ── Validación: ¿es un DNI? ──────────────────────────────
+                    const DNI_KEYWORDS = ['ESPAÑA', 'IDENTIDAD', 'APELLIDO', 'NOMBRE', 'DNI'];
+                    const hasKeyword = DNI_KEYWORDS.some(kw => upper.some(l => l.includes(kw)));
+                    const hasDniNumber = /\d{8}[A-Z]/.test(upper.join('').replace(/[^A-Z0-9]/g, ''));
+
+                    if (!hasKeyword && !hasDniNumber) {
+                        Alert.alert('Documento no reconocido', 'No parece ser un DNI válido. Asegúrate de enfocar el anverso del documento.');
+                        reset();
+                        return;
+                    }
+
+                    // ── Face crop ────────────────────────────────────────────
+                    // Take the largest face detected, add 15% padding, crop.
+                    let photoUri: string | null = null;
+                    if (faces.length > 0) {
+                        // Face framework returns: { frame: { width, height, top, left }, ... }
+                        const largest = faces.reduce((a, b) =>
+                            (a.frame.width * a.frame.height) >=
+                                (b.frame.width * b.frame.height) ? a : b
+                        );
+
+                        const fw = largest.frame.width;
+                        const fh = largest.frame.height;
+                        const fx = largest.frame.left;
+                        const fy = largest.frame.top;
+
+                        const pad = Math.round(Math.min(fw, fh) * 0.15);
+                        const cropData = {
+                            offset: { x: Math.max(0, fx - pad), y: Math.max(0, fy - pad) },
+                            size: { width: fw + pad * 2, height: fh + pad * 2 },
+                        };
+
+                        try {
+                            const result = await ImageEditor.cropImage(compressed.uri, cropData);
+                            // image-editor returns string (URI) or object depending on version/config
+                            photoUri = typeof result === 'string' ? result : (result as any).uri;
+                        } catch {
+                            photoUri = null; // face crop failed gracefully
+                        }
+                    }
 
                     const LABEL_WORDS = [
                         'APELLIDO', 'COGNOM', 'NOMBRE', 'NOM', 'SEXO', 'SEXE',
@@ -184,7 +234,7 @@ export function useScanScreen() {
                         surname1: surnameLines[0] ? toTitleCase(surnameLines[0]) : '—',
                         surname2: surnameLines[1] ? toTitleCase(surnameLines[1]) : null,
                         dob,
-                        photo: null,  // foto: requiere backend
+                        photo: photoUri,  // Local memory-cached URI from ImageEditor
                     });
                 } catch (error: any) {
                     if (error?.name === 'AbortError') {
