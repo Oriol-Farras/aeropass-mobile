@@ -52,6 +52,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="scan" options={{ headerShown: false, animation: 'slide_from_right', presentation: 'modal' }} />
         <Stack.Screen name="dni-result" options={{ headerShown: false, animation: 'slide_from_right', presentation: 'modal' }} />
+        <Stack.Screen name="face-instructions" options={{ headerShown: false, animation: 'slide_from_right', presentation: 'modal' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

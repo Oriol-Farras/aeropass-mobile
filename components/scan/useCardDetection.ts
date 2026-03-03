@@ -24,6 +24,7 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
     const consecutiveHits = useRef(0);
 
     const analyzeFrame = useCallback(async (): Promise<'none' | 'too_far' | 'detected'> => {
+        // Prevent calling takePhoto if the camera is not fully initialized or mounted
         if (!cameraRef.current) return 'none';
 
         try {
@@ -57,8 +58,20 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
             } else {
                 return 'too_far';
             }
-        } catch (e) {
-            console.warn('[CardDetection] Error detectando frame:', e);
+        } catch (e: any) {
+            const errMsg = e?.message || String(e);
+
+            // We ignore expected errors that happen when Camera is temporarily inactive or unavailable
+            if (
+                errMsg.includes('Failed to submit capture request') ||
+                errMsg.includes('Camera is not running') ||
+                errMsg.includes('invalid-output-configuration') ||
+                errMsg.includes('Camera is closed')
+            ) {
+                return 'none';
+            }
+
+            console.warn('[CardDetection] Error:', errMsg);
             return 'none';
         }
     }, [cameraRef]);

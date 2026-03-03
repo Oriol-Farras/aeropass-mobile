@@ -12,12 +12,14 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { Camera } from 'react-native-vision-camera';
 
 import { styles, permStyles } from '@/components/scan/ScanScreen.styles';
 import { useScanScreen } from '@/components/scan/useScanScreen';
 
 export default function ScanScreen() {
+    const isFocused = useIsFocused();
     const {
         router,
         hasPermission,
@@ -97,7 +99,15 @@ export default function ScanScreen() {
             <View style={styles.viewfinderWrapper}>
                 <View style={styles.viewfinder}>
 
-                    {capturedUri ? (
+                    <Camera
+                        ref={cameraRef}
+                        style={StyleSheet.absoluteFillObject}
+                        device={device}
+                        isActive={isFocused && state !== 'captured'}
+                        photo={true}
+                    />
+
+                    {capturedUri && (
                         <>
                             <Image
                                 source={{ uri: compressedUri ?? capturedUri }}
@@ -143,14 +153,6 @@ export default function ScanScreen() {
                                 </View>
                             )}
                         </>
-                    ) : (
-                        <Camera
-                            ref={cameraRef}
-                            style={StyleSheet.absoluteFillObject}
-                            device={device}
-                            isActive={state !== 'captured'}
-                            photo={true}
-                        />
                     )}
 
                     <View style={[styles.corner, styles.cornerTL, state === 'detected' && { borderColor: '#22c55e' }, state === 'too_far' && { borderColor: '#f97316' }]} />

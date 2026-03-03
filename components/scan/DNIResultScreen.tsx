@@ -253,10 +253,6 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                     <Text style={{ fontSize: 16, color: '#ffffff', fontWeight: '700' }}>Confirmar y continuar</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={{ alignItems: 'center' }} onPress={onCancel}>
-                    <Text style={{ fontSize: 14, color: '#6b7280', fontWeight: '500' }}>Cancelar y volver a escanear</Text>
-                </TouchableOpacity>
-
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <MaterialIcons name="lock" size={12} color="#d1d5db" />
                     <Text style={{ fontSize: 11, color: '#d1d5db', letterSpacing: 0.5 }}>ENCRYPTED & ON-DEVICE</Text>

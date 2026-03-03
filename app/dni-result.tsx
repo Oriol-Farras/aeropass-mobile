@@ -23,10 +23,10 @@ export default function DniResultRoute() {
         <DNIResultScreen
             dni={dni}
             onConfirm={(editedDni) => {
-                // Here we clean up and go to home, mimicking onAcceptDni from useScanScreen
-                // By default the router can go back to the top or home
-                router.dismissAll();
-                router.replace('/(tabs)');
+                router.push({
+                    pathname: '/face-instructions',
+                    params: { dni: JSON.stringify(editedDni) }
+                });
             }}
             onCancel={() => {
                 // Go back to the scan screen
