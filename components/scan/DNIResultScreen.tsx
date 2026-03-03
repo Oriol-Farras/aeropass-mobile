@@ -1,10 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Image,
     ScrollView,
     StatusBar,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -21,11 +22,81 @@ export interface DNIData {
 
 interface Props {
     dni: DNIData;
-    onConfirm: () => void;
+    onConfirm: (editedDni: DNIData) => void;
     onCancel: () => void;
 }
 
+// ── Field row ─────────────────────────────────────────────────────────
+function Field({
+    label,
+    value,
+    onChangeText,
+    editing,
+    bold = false,
+    large = false,
+}: {
+    label: string;
+    value: string;
+    onChangeText: (t: string) => void;
+    editing: boolean;
+    bold?: boolean;
+    large?: boolean;
+}) {
+    return (
+        <View>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: '#9ca3af', letterSpacing: 1.2, marginBottom: 2 }}>
+                {label}
+            </Text>
+            {editing ? (
+                <TextInput
+                    value={value}
+                    onChangeText={onChangeText}
+                    style={{
+                        fontSize: large ? 22 : 15,
+                        fontWeight: bold ? '700' : '500',
+                        color: '#111',
+                        borderBottomWidth: 1.5,
+                        borderBottomColor: '#3b82f6',
+                        paddingVertical: 2,
+                        paddingHorizontal: 0,
+                    }}
+                />
+            ) : (
+                <Text style={{
+                    fontSize: large ? 26 : 15,
+                    fontWeight: bold ? (large ? '900' : '700') : '500',
+                    color: '#111',
+                    letterSpacing: large ? 3 : 0,
+                }}>
+                    {value || '—'}
+                </Text>
+            )}
+        </View>
+    );
+}
+
+// ── Main screen ──────────────────────────────────────────────────────
 export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
+    const [surname1, setSurname1] = useState(dni.surname1 ?? '');
+    const [surname2, setSurname2] = useState(dni.surname2 ?? '');
+    const [name, setName] = useState(dni.name ?? '');
+    const [dob, setDob] = useState(dni.dob ?? '');
+    const [number, setNumber] = useState(dni.number ?? '');
+
+    const [editing, setEditing] = useState(false);
+
+    const handleConfirm = () => {
+        setEditing(false);
+        onConfirm({
+            ...dni,
+            surname1: surname1 || null,
+            surname2: surname2 || null,
+            name: name || null,
+            dob: dob || null,
+            number,
+        });
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -46,6 +117,7 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
             >
                 {/* ── ID Card ── */}
                 <View style={{
@@ -61,13 +133,30 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                     borderColor: '#f0f0f0',
                     marginBottom: 20,
                 }}>
-                    {/* Badge row — verde claro */}
+                    {/* Badge row */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#dcfce7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
                             <MaterialIcons name="verified" size={14} color="#16a34a" />
                             <Text style={{ fontSize: 12, fontWeight: '700', color: '#16a34a', letterSpacing: 0.8 }}>VERIFIED ID</Text>
                         </View>
-                        <MaterialIcons name="fingerprint" size={24} color="#d1d5db" />
+                        {/* Global edit toggle */}
+                        <TouchableOpacity
+                            onPress={() => setEditing(!editing)}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 4,
+                                backgroundColor: editing ? '#dbeafe' : '#f3f4f6',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 20,
+                            }}
+                        >
+                            <MaterialIcons name={editing ? 'check' : 'edit'} size={16} color={editing ? '#3b82f6' : '#6b7280'} />
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: editing ? '#3b82f6' : '#6b7280' }}>
+                                {editing ? 'Done' : 'Edit'}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Photo + fields */}
@@ -87,36 +176,50 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                             )}
                         </View>
 
-                        {/* Campos extraídos */}
+                        {/* Fields */}
                         <View style={{ flex: 1, justifyContent: 'center', gap: 12 }}>
-                            <View>
-                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#9ca3af', letterSpacing: 1.2, marginBottom: 2 }}>APELLIDOS</Text>
-                                <Text style={{ fontSize: 15, fontWeight: '700', color: '#111' }}>
-                                    {[dni.surname1, dni.surname2].filter(Boolean).join(' ') || '—'}
-                                </Text>
-                            </View>
-                            <View>
-                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#9ca3af', letterSpacing: 1.2, marginBottom: 2 }}>NOMBRE</Text>
-                                <Text style={{ fontSize: 15, fontWeight: '700', color: '#111' }}>{dni.name || '—'}</Text>
-                            </View>
-                            <View>
-                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#9ca3af', letterSpacing: 1.2, marginBottom: 2 }}>FECHA DE NACIMIENTO</Text>
-                                <Text style={{ fontSize: 15, fontWeight: '500', color: '#111' }}>{dni.dob || '—'}</Text>
-                            </View>
+                            <Field
+                                label="APELLIDOS"
+                                value={[surname1, surname2].filter(Boolean).join(' ')}
+                                onChangeText={(text) => {
+                                    const parts = text.split(/\s+/);
+                                    setSurname1(parts[0] ?? '');
+                                    setSurname2(parts.length > 1 ? parts.slice(1).join(' ') : '');
+                                }}
+                                editing={editing}
+                                bold
+                            />
+                            <Field
+                                label="NOMBRE"
+                                value={name}
+                                onChangeText={setName}
+                                editing={editing}
+                                bold
+                            />
+                            <Field
+                                label="FECHA DE NACIMIENTO"
+                                value={dob}
+                                onChangeText={setDob}
+                                editing={editing}
+                            />
                         </View>
                     </View>
 
                     {/* DNI number */}
                     <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#f0f0f0' }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#9ca3af', letterSpacing: 1, marginBottom: 4 }}>NÚMERO DE DOCUMENTO</Text>
-                        <Text style={{ fontSize: 26, fontWeight: '900', color: '#111', letterSpacing: 3 }}>
-                            {dni.number}
-                        </Text>
+                        <Field
+                            label="NÚMERO DE DOCUMENTO"
+                            value={number}
+                            onChangeText={setNumber}
+                            editing={editing}
+                            bold
+                            large
+                        />
                     </View>
                 </View>
 
                 {/* ── Biometric banner ── */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', borderRadius: 16, padding: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', borderRadius: 16, padding: 16, marginBottom: 12 }}>
                     <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#22c55e', alignItems: 'center', justifyContent: 'center' }}>
                         <MaterialIcons name="check" size={24} color="#fff" />
                     </View>
@@ -125,13 +228,26 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                         <Text style={{ fontSize: 13, color: '#6b7280', lineHeight: 18 }}>Your identity has been successfully verified by AeroPass.</Text>
                     </View>
                 </View>
+
+                {/* ── Edit hint banner (same style as above) ── */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#f9fafb', borderRadius: 16, padding: 16 }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#3b82f6', alignItems: 'center', justifyContent: 'center' }}>
+                        <MaterialIcons name="edit" size={22} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 2 }}>Review Your Data</Text>
+                        <Text style={{ fontSize: 13, color: '#6b7280', lineHeight: 18 }}>
+                            If any information is incorrect, tap the Edit button above to make corrections.
+                        </Text>
+                    </View>
+                </View>
             </ScrollView>
 
-            {/* ── Botones + footer fijos al fondo ── */}
+            {/* ── Botones + footer ── */}
             <View style={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 16, gap: 12 }}>
                 <TouchableOpacity
                     style={{ backgroundColor: '#111', paddingVertical: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    onPress={onConfirm}
+                    onPress={handleConfirm}
                 >
                     <MaterialIcons name="check" size={18} color="#ffffff" />
                     <Text style={{ fontSize: 16, color: '#ffffff', fontWeight: '700' }}>Confirmar y continuar</Text>

@@ -75,7 +75,10 @@ export default function ScanScreen() {
         return (
             <DNIResultScreen
                 dni={detectedDNI}
-                onConfirm={onAcceptDni}
+                onConfirm={(editedDni) => {
+                    setDetectedDNI(editedDni);
+                    onAcceptDni();
+                }}
                 onCancel={() => setDetectedDNI(null)}
             />
         );
