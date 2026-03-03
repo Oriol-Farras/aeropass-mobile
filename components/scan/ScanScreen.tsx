@@ -153,16 +153,31 @@ export default function ScanScreen() {
                         />
                     )}
 
-                    <View style={[styles.corner, styles.cornerTL, state === 'detected' && { borderColor: '#22c55e' }]} />
-                    <View style={[styles.corner, styles.cornerTR, state === 'detected' && { borderColor: '#22c55e' }]} />
-                    <View style={[styles.corner, styles.cornerBL, state === 'detected' && { borderColor: '#22c55e' }]} />
-                    <View style={[styles.corner, styles.cornerBR, state === 'detected' && { borderColor: '#22c55e' }]} />
+                    <View style={[styles.corner, styles.cornerTL, state === 'detected' && { borderColor: '#22c55e' }, state === 'too_far' && { borderColor: '#f97316' }]} />
+                    <View style={[styles.corner, styles.cornerTR, state === 'detected' && { borderColor: '#22c55e' }, state === 'too_far' && { borderColor: '#f97316' }]} />
+                    <View style={[styles.corner, styles.cornerBL, state === 'detected' && { borderColor: '#22c55e' }, state === 'too_far' && { borderColor: '#f97316' }]} />
+                    <View style={[styles.corner, styles.cornerBR, state === 'detected' && { borderColor: '#22c55e' }, state === 'too_far' && { borderColor: '#f97316' }]} />
                 </View>
 
+                {state === 'too_far' && (
+                    <Text style={{
+                        position: 'absolute',
+                        bottom: 24, // movido hacia arriba (dentro del área de enfoque)
+                        color: '#f97316',
+                        fontWeight: '600',
+                        fontSize: 16,
+                        textAlign: 'center',
+                        width: '100%',
+                        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+                        textShadowOffset: { width: -1, height: 1 },
+                        textShadowRadius: 10
+                    }}>Move closer to the document</Text>
+                )}
+
                 <View style={styles.statusPill}>
-                    <View style={[styles.statusDot, { backgroundColor: state === 'detected' ? '#22c55e' : (state === 'captured' ? '#3b82f6' : '#eab308') }]} />
+                    <View style={[styles.statusDot, { backgroundColor: state === 'detected' ? '#22c55e' : (state === 'captured' ? '#3b82f6' : (state === 'too_far' ? '#f97316' : '#eab308')) }]} />
                     <Text style={styles.statusText}>
-                        {state === 'detected' ? 'Ready to capture' : (state === 'captured' ? 'Photo captured!' : 'Looking for document...')}
+                        {state === 'detected' ? 'Ready to capture' : (state === 'captured' ? 'Photo captured!' : (state === 'too_far' ? 'Move closer' : 'Looking for document...'))}
                     </Text>
                 </View>
             </View>

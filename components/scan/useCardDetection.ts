@@ -1,8 +1,8 @@
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import TextRecognition from '@react-native-ml-kit/text-recognition';
 import { Camera } from 'react-native-vision-camera';
 
-export type DetectionState = 'searching' | 'detected' | 'captured';
+export type DetectionState = 'searching' | 'too_far' | 'detected' | 'captured';
 
 interface UseCardDetectionOptions {
     cameraRef: React.RefObject<Camera | null>;
@@ -23,12 +23,8 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const consecutiveHits = useRef(0);
 
-    /**
-     * Heurística en JS para detectar tarjeta en silencio sin plugins extra:
-     * Toma foto silenciosa de ínfima resolución, analiza contraste/patrón.
-     */
-    const analyzeFrame = useCallback(async (): Promise<boolean> => {
-        if (!cameraRef.current) return false;
+    const analyzeFrame = useCallback(async (): Promise<'none' | 'too_far' | 'detected'> => {
+        if (!cameraRef.current) return 'none';
 
         try {
             const photo = await cameraRef.current.takePhoto({
@@ -36,33 +32,34 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
                 enableShutterSound: false,
             });
 
-            if (!photo?.path) return false;
+            if (!photo?.path) return 'none';
             const uri = `file://${photo.path}`;
 
-            const thumb = await manipulateAsync(
-                uri,
-                [{ resize: { width: 100 } }],
-                { compress: 0.1, format: SaveFormat.JPEG, base64: true }
-            );
+            const recognized = await TextRecognition.recognize(uri);
 
-            if (!thumb.base64) return false;
+            const DNI_KEYWORDS = ['ESPAÑA', 'IDENTIDAD', 'APELLIDO', 'NOMBRE', 'DNI', 'NACIONAL'];
+            const text = recognized.text.toUpperCase();
+            const hasKeyword = DNI_KEYWORDS.some(kw => text.includes(kw));
 
-            const mid = Math.floor(thumb.base64.length / 2);
-            const sample = thumb.base64.slice(mid, mid + 500);
+            if (!hasKeyword) return 'none';
 
-            let sum = 0; let sumSq = 0;
-            for (let i = 0; i < sample.length; i++) {
-                const v = sample.charCodeAt(i);
-                sum += v; sumSq += v * v;
+            let maxBlockWidth = 0;
+            for (const block of recognized.blocks) {
+                if (block.frame && block.frame.width > maxBlockWidth) {
+                    maxBlockWidth = block.frame.width;
+                }
             }
-            const mean = sum / sample.length;
-            const variance = sumSq / sample.length - mean * mean;
 
-            return variance >= 460;
+            const textToImageRatio = maxBlockWidth / photo.width;
 
+            if (textToImageRatio > 0.28) {
+                return 'detected';
+            } else {
+                return 'too_far';
+            }
         } catch (e) {
             console.warn('[CardDetection] Error detectando frame:', e);
-            return false;
+            return 'none';
         }
     }, [cameraRef]);
 
@@ -73,16 +70,19 @@ export function useCardDetection({ cameraRef }: UseCardDetectionOptions): UseCar
             if (isAnalyzing.current || (state as string) === 'captured') return;
             isAnalyzing.current = true;
 
-            const detectedEdges = await analyzeFrame();
+            const detectionResult = await analyzeFrame();
 
-            if (detectedEdges) {
+            if (detectionResult === 'detected') {
                 consecutiveHits.current += 1;
                 if (consecutiveHits.current >= 1) {
                     setState('detected');
                 }
+            } else if (detectionResult === 'too_far') {
+                consecutiveHits.current = 0;
+                setState('too_far');
             } else {
                 consecutiveHits.current = 0;
-                setState(prev => prev === 'detected' ? 'searching' : prev);
+                setState(prev => (prev === 'detected' || prev === 'too_far') ? 'searching' : prev);
             }
 
             isAnalyzing.current = false;
