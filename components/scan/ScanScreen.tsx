@@ -16,7 +16,6 @@ import { Camera } from 'react-native-vision-camera';
 
 import { styles, permStyles } from '@/components/scan/ScanScreen.styles';
 import { useScanScreen } from '@/components/scan/useScanScreen';
-import DNIResultScreen from '@/components/scan/DNIResultScreen';
 
 export default function ScanScreen() {
     const {
@@ -34,8 +33,6 @@ export default function ScanScreen() {
         capturedUri,
         takePicture,
         reset,
-        detectedDNI,
-        setDetectedDNI,
         onAcceptDni,
     } = useScanScreen();
 
@@ -70,19 +67,7 @@ export default function ScanScreen() {
         );
     }
 
-    // ── PANTALLA DE RESULTADO (DNI DETECTADO) ──
-    if (detectedDNI) {
-        return (
-            <DNIResultScreen
-                dni={detectedDNI}
-                onConfirm={(editedDni) => {
-                    setDetectedDNI(editedDni);
-                    onAcceptDni();
-                }}
-                onCancel={() => setDetectedDNI(null)}
-            />
-        );
-    }
+    // Screen rendering has been delegated to `/dni-result` via router.push
 
 
 

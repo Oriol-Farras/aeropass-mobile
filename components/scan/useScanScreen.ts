@@ -19,14 +19,7 @@ export function useScanScreen() {
     const [compressedKB, setCompressedKB] = React.useState<number>(-1);
 
     // OCR Results
-    const [detectedDNI, setDetectedDNI] = React.useState<{
-        number: string;
-        name: string | null;
-        surname1: string | null;
-        surname2: string | null;
-        dob: string | null;
-        photo: string | null;
-    } | null>(null);
+    // OCR Results state has moved directly to router parameters
 
     const isOcrActive = React.useRef(false);
 
@@ -248,13 +241,21 @@ export function useScanScreen() {
                     // Fallback NOM (Catalan label)
                     const resolvedName = nameLines[0] ?? nextValues('NOM', 1)[0] ?? null;
 
-                    setDetectedDNI({
-                        number: dniNumber,
-                        name: resolvedName ? toTitleCase(resolvedName) : '—',
-                        surname1: surnameLines[0] ? toTitleCase(surnameLines[0]) : '—',
-                        surname2: surnameLines[1] ? toTitleCase(surnameLines[1]) : null,
-                        dob,
-                        photo: photoUri,
+                    // Reset the camera back to scanning state so if they come back it's live
+                    reset();
+
+                    router.push({
+                        pathname: '/dni-result',
+                        params: {
+                            dni: JSON.stringify({
+                                number: dniNumber,
+                                name: resolvedName ? toTitleCase(resolvedName) : '—',
+                                surname1: surnameLines[0] ? toTitleCase(surnameLines[0]) : '—',
+                                surname2: surnameLines[1] ? toTitleCase(surnameLines[1]) : null,
+                                dob,
+                                photo: photoUri,
+                            })
+                        }
                     });
                 } catch (error: any) {
                     if (error?.name === 'AbortError') {
@@ -276,7 +277,6 @@ export function useScanScreen() {
 
     const onAcceptDni = () => {
         // En el futuro, aquí enrutaremos a la pantalla final. Por ahora, limpiamos y reseteamos.
-        setDetectedDNI(null);
         reset();
         // router.push('/home'); // Por ejemplo
     };
@@ -296,8 +296,6 @@ export function useScanScreen() {
         capturedUri,
         takePicture,
         reset,
-        detectedDNI,
-        setDetectedDNI,
         onAcceptDni,
     };
 }
