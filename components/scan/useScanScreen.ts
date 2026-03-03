@@ -157,18 +157,28 @@ export function useScanScreen() {
                         const fx = largest.frame.left;
                         const fy = largest.frame.top;
 
-                        const pad = Math.round(Math.min(fw, fh) * 0.15);
+                        // Face center
+                        const cx = fx + fw / 2;
+                        const cy = fy + fh / 2;
+
+                        // DNI passport photo ratio: slightly portrait (~4:5)
+                        const cropW = Math.round(fw * 1.4);
+                        const cropH = Math.round(cropW * 1.15);
+
+                        // Center the crop box: face center at ~58% from top (more space above for head)
+                        const cropX = Math.max(0, Math.round(cx - cropW / 2));
+                        const cropY = Math.max(0, Math.round(cy - cropH * 0.50));
+
                         const cropData = {
-                            offset: { x: Math.max(0, fx - pad), y: Math.max(0, fy - pad) },
-                            size: { width: fw + pad * 2, height: fh + pad * 2 },
+                            offset: { x: cropX, y: cropY },
+                            size: { width: cropW, height: cropH },
                         };
 
                         try {
                             const result = await ImageEditor.cropImage(compressed.uri, cropData);
-                            // image-editor returns string (URI) or object depending on version/config
                             photoUri = typeof result === 'string' ? result : (result as any).uri;
                         } catch {
-                            photoUri = null; // face crop failed gracefully
+                            photoUri = null;
                         }
                     }
 
@@ -224,17 +234,27 @@ export function useScanScreen() {
                         }
                     }
 
-                    // Name & surnames from bilingual labels
-                    const surnameLines = nextValues('APELLIDO', 2);
+                    // Name & surnames — try APELLIDO, fallback to COGNOM
+                    let surnameLines = nextValues('APELLIDO', 2);
+                    if (surnameLines.length === 0) surnameLines = nextValues('COGNOM', 2);
+
+                    // If both surnames came on a single line (e.g. "García López"), split them
+                    if (surnameLines.length === 1) {
+                        const parts = surnameLines[0].trim().split(/\s+/);
+                        if (parts.length >= 2) surnameLines = [parts[0], parts.slice(1).join(' ')];
+                    }
+
                     const nameLines = nextValues('NOMBRE', 1);
+                    // Fallback NOM (Catalan label)
+                    const resolvedName = nameLines[0] ?? nextValues('NOM', 1)[0] ?? null;
 
                     setDetectedDNI({
                         number: dniNumber,
-                        name: nameLines[0] ? toTitleCase(nameLines[0]) : '—',
+                        name: resolvedName ? toTitleCase(resolvedName) : '—',
                         surname1: surnameLines[0] ? toTitleCase(surnameLines[0]) : '—',
                         surname2: surnameLines[1] ? toTitleCase(surnameLines[1]) : null,
                         dob,
-                        photo: photoUri,  // Local memory-cached URI from ImageEditor
+                        photo: photoUri,
                     });
                 } catch (error: any) {
                     if (error?.name === 'AbortError') {
