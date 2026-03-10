@@ -107,7 +107,7 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                     <MaterialIcons name="close" size={26} color="#111" />
                 </TouchableOpacity>
                 <Text style={{ flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#111' }}>
-                    Identity Card Verification
+                    Verificación del DNI
                 </Text>
                 <View style={{ width: 34 }} />
             </View>
@@ -154,7 +154,7 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                         >
                             <MaterialIcons name={editing ? 'check' : 'edit'} size={16} color={editing ? '#3b82f6' : '#6b7280'} />
                             <Text style={{ fontSize: 12, fontWeight: '600', color: editing ? '#3b82f6' : '#6b7280' }}>
-                                {editing ? 'Done' : 'Edit'}
+                                {editing ? 'Hecho' : 'Editar'}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -224,8 +224,8 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                         <MaterialIcons name="check" size={24} color="#fff" />
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 2 }}>Identity Confirmed</Text>
-                        <Text style={{ fontSize: 13, color: '#6b7280', lineHeight: 18 }}>Your identity has been successfully verified by AeroPass.</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 2 }}>Identidad confirmada</Text>
+                        <Text style={{ fontSize: 13, color: '#6b7280', lineHeight: 18 }}>Tu identidad ha sido verificada correctamente por AeroPass.</Text>
                     </View>
                 </View>
 
@@ -235,9 +235,9 @@ export default function DNIResultScreen({ dni, onConfirm, onCancel }: Props) {
                         <MaterialIcons name="edit" size={22} color="#fff" />
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 2 }}>Review Your Data</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 2 }}>Revisa tus datos</Text>
                         <Text style={{ fontSize: 13, color: '#6b7280', lineHeight: 18 }}>
-                            If any information is incorrect, tap the Edit button above to make corrections.
+                            Si algún dato es incorrecto, pulsa el botón Editar para corregirlo.
                         </Text>
                     </View>
                 </View>

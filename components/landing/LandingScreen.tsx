@@ -39,11 +39,11 @@ export default function LandingScreen() {
                     onPress={() => router.push('/dni-instructions')}
                     style={styles.primaryButton}
                 >
-                    <Text style={styles.buttonText}>Start Identity Verification</Text>
+                    <Text style={styles.buttonText}>Verificar mi identidad</Text>
                     <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
                 </TouchableOpacity>
 
-                <Text style={styles.disclaimer}>Powered by AeroPass SecureID™</Text>
+                <Text style={styles.disclaimer}>Desarrollado con AeroPass SecureID™</Text>
             </View>
         </SafeAreaView>
     );

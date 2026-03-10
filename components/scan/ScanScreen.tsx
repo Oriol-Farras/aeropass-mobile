@@ -44,15 +44,15 @@ export default function ScanScreen() {
                 <StatusBar barStyle="light-content" backgroundColor="#141414" />
                 <View style={permStyles.center}>
                     <MaterialIcons name="camera-alt" size={56} color="rgba(255,255,255,0.4)" />
-                    <Text style={permStyles.title}>Camera Access Required</Text>
+                    <Text style={permStyles.title}>Acceso a la cámara requerido</Text>
                     <Text style={permStyles.subtitle}>
-                        AeroPass needs camera access to scan your ID document at 60 FPS in real-time.
+                        AeroPass necesita acceso a la cámara para escanear tu documento a 60 FPS en tiempo real.
                     </Text>
                     <TouchableOpacity style={permStyles.btn} onPress={requestPermission}>
-                        <Text style={permStyles.btnText}>Allow Camera</Text>
+                        <Text style={permStyles.btnText}>Permitir cámara</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={permStyles.cancelText}>Cancel</Text>
+                        <Text style={permStyles.cancelText}>Cancelar</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -83,16 +83,16 @@ export default function ScanScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.titlePill}>
-                    <Text style={styles.titlePillText}>AEROPASS ID CHECK</Text>
+                    <Text style={styles.titlePillText}>AEROPASS VERIFICACIÓN</Text>
                 </View>
 
                 <View style={[styles.iconButton, { opacity: 0 }]} />
             </View>
 
             <View style={styles.heroSection}>
-                <Text style={styles.heroTitle}>Scan Document</Text>
+                <Text style={styles.heroTitle}>Escanear documento</Text>
                 <Text style={styles.heroSubtitle}>
-                    Align the back of your ID card. Ensure the{'\n'}PDF417 or QR code is visible.
+                    Enfoca el reverso de tu DNI. Asegúrate de que{'\n'}el código PDF417 o QR sea visible.
                 </Text>
             </View>
 
@@ -147,7 +147,7 @@ export default function ScanScreen() {
                                         </View>
 
                                         <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 10, textAlign: 'center' }}>
-                                            Neural processing takes a moment
+                                            El procesamiento puede tardar un momento
                                         </Text>
                                     </View>
                                 </View>
@@ -173,13 +173,13 @@ export default function ScanScreen() {
                         textShadowColor: 'rgba(0, 0, 0, 0.75)',
                         textShadowOffset: { width: -1, height: 1 },
                         textShadowRadius: 10
-                    }}>Move closer to the document</Text>
+                    }}>Acércate más al documento</Text>
                 )}
 
                 <View style={styles.statusPill}>
                     <View style={[styles.statusDot, { backgroundColor: state === 'detected' ? '#22c55e' : (state === 'captured' ? '#3b82f6' : (state === 'too_far' ? '#f97316' : '#eab308')) }]} />
                     <Text style={styles.statusText}>
-                        {state === 'detected' ? 'Ready to capture' : (state === 'captured' ? 'Photo captured!' : (state === 'too_far' ? 'Move closer' : 'Looking for document...'))}
+                        {state === 'detected' ? 'Listo para capturar' : (state === 'captured' ? '¡Foto capturada!' : (state === 'too_far' ? 'Acércate más' : 'Buscando documento...'))}
                     </Text>
                 </View>
             </View>
@@ -190,7 +190,7 @@ export default function ScanScreen() {
                         <View style={styles.bottomActionIcon}>
                             <MaterialIcons name="photo" size={24} color="#ffffff" />
                         </View>
-                        <Text style={styles.bottomActionLabel}>GALLERY</Text>
+                        <Text style={styles.bottomActionLabel}>GALERÍA</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -221,7 +221,7 @@ export default function ScanScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.poweredBy}>Powered by AeroPass Secure OCR</Text>
+                <Text style={styles.poweredBy}>Desarrollado con AeroPass Secure OCR</Text>
             </View>
         </SafeAreaView>
     );

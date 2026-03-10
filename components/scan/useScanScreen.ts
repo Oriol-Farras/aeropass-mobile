@@ -24,12 +24,12 @@ export function useScanScreen() {
     const isOcrActive = React.useRef(false);
 
     const progressAnim = useRef(new Animated.Value(0)).current;
-    const [loadingText, setLoadingText] = React.useState('Preparing image...');
+    const [loadingText, setLoadingText] = React.useState('Preparando imagen...');
 
     React.useEffect(() => {
         if (isProcessingOcr) {
             progressAnim.setValue(0);
-            setLoadingText('Compressing and optimizing...');
+            setLoadingText('Comprimiendo y optimizando...');
 
             Animated.timing(progressAnim, {
                 toValue: 90,
@@ -37,9 +37,9 @@ export function useScanScreen() {
                 useNativeDriver: false,
             }).start();
 
-            const t1 = setTimeout(() => setLoadingText('Uploading encrypted ID...'), 2000);
-            const t2 = setTimeout(() => setLoadingText('Analyzing text with EasyOCR...'), 5000);
-            const t3 = setTimeout(() => setLoadingText('Validating security features...'), 9000);
+            const t1 = setTimeout(() => setLoadingText('Subiendo ID cifrado...'), 2000);
+            const t2 = setTimeout(() => setLoadingText('Analizando texto con EasyOCR...'), 5000);
+            const t3 = setTimeout(() => setLoadingText('Validando características de seguridad...'), 9000);
 
             return () => {
                 clearTimeout(t1);
