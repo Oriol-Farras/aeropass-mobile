@@ -33,7 +33,7 @@ export function useScanScreen() {
 
             Animated.timing(progressAnim, {
                 toValue: 90,
-                duration: 12000,
+                duration: 500,
                 useNativeDriver: false,
             }).start();
 
