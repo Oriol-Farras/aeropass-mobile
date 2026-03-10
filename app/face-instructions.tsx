@@ -67,9 +67,7 @@ export default function FaceInstructionsScreen() {
                 <TouchableOpacity
                     style={styles.button}
                     onPress={() => {
-                        // For now we end the flow here, or redirect to a face-scan route when created.
-                        router.dismissAll();
-                        router.replace('/(tabs)');
+                        router.push('/face-scan');
                     }}
                 >
                     <Text style={styles.buttonText}>Comenzar escaneo</Text>
