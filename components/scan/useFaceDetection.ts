@@ -2,9 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import FaceDetection from '@react-native-ml-kit/face-detection';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
-export type FaceScanState = 'searching' | 'detected' | 'blink_prompt' | 'look_camera' | 'verified' | 'captured';
+export type FaceScanState = 'searching' | 'detected' | 'blink_prompt' | 'look_camera' | 'verified' | 'captured' | 'comparing' | 'match' | 'no_match';
 
-export function useFaceDetection() {
+interface UseFaceDetectionProps {
+    dniPhoto?: string | null;
+}
+
+export function useFaceDetection({ dniPhoto }: UseFaceDetectionProps = {}) {
     const { hasPermission, requestPermission } = useCameraPermission();
     const cameraRef = useRef<Camera>(null);
     const device = useCameraDevice('front');
@@ -15,6 +19,11 @@ export function useFaceDetection() {
 
     const isAnalyzing = useRef(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const dniPhotoRef = useRef(dniPhoto);
+    useEffect(() => {
+        dniPhotoRef.current = dniPhoto;
+    }, [dniPhoto]);
 
     // Blink tracking: need eyes-closed → eyes-open transition
     const eyesWereClosed = useRef(false);
@@ -140,22 +149,91 @@ export function useFaceDetection() {
 
                     // Small delay so the user sees "verified" before capture
                     setTimeout(async () => {
+                        let finalUri = uri;
                         try {
                             const finalPhoto = await cameraRef.current?.takePhoto({
                                 flash: 'off',
                                 enableShutterSound: false,
                             });
                             if (finalPhoto?.path) {
-                                setCapturedUri(`file://${finalPhoto.path}`);
-                                setState('captured');
-                                setStatusMessage('¡Foto capturada!');
+                                finalUri = `file://${finalPhoto.path}`;
                             }
                         } catch {
-                            // Fallback: use the analysis photo
-                            setCapturedUri(uri);
+                            // Fallback to analysis photo if takePhoto fails
+                        }
+
+                        setCapturedUri(finalUri);
+
+                        if (!dniPhotoRef.current) {
+                            console.log("[Face++] Saltando API: No hay dniPhoto disponible.");
                             setState('captured');
                             setStatusMessage('¡Foto capturada!');
+                            return;
                         }
+
+                        // Face++ Comparison
+                        console.log('\n[Face++] Empezando verificación facial con la API Compare...');
+                        setState('comparing');
+                        setStatusMessage('Comparando con tu DNI...');
+
+                        try {
+                            const apiKey = process.env.EXPO_PUBLIC_FACEPLUSPLUS_API_KEY;
+                            const apiSecret = process.env.EXPO_PUBLIC_FACEPLUSPLUS_API_SECRET;
+
+                            if (!apiKey || !apiSecret) {
+                                throw new Error('API Keys no configuradas en el .env');
+                            }
+
+                            const formData = new FormData();
+                            formData.append('api_key', apiKey);
+                            formData.append('api_secret', apiSecret);
+
+                            // Appending files for React Native FormData
+                            formData.append('image_file1', {
+                                uri: finalUri,
+                                name: 'face.jpg',
+                                type: 'image/jpeg',
+                            } as any);
+
+                            formData.append('image_file2', {
+                                uri: dniPhotoRef.current,
+                                name: 'dni.jpg',
+                                type: 'image/jpeg',
+                            } as any);
+
+                            console.log('[Face++] Enviando petición POST a https://api-us.faceplusplus.com/facepp/v3/compare...');
+                            const response = await fetch('https://api-us.faceplusplus.com/facepp/v3/compare', {
+                                method: 'POST',
+                                body: formData,
+                            });
+
+                            const result = await response.json();
+
+                            if (result.error_message) {
+                                throw new Error(`API Error: ${result.error_message}`);
+                            }
+
+                            const confidence = result.confidence || 0;
+                            const threshold = result.thresholds?.['1e-4'] || 70; // Recommended threshold
+
+                            console.log(`[Face++] Respuesta Recibida - Confianza: ${confidence} / Umbral 1e-4: ${threshold}`);
+
+                            if (confidence >= threshold) {
+                                console.log('[Face++] ✅ ¡Identidad verificada! Match exitoso.');
+                                setState('match');
+                                setStatusMessage('¡Identidad verificada!');
+                            } else {
+                                setState('no_match');
+                                setStatusMessage('No coincide con el DNI');
+                            }
+                        } catch (error) {
+                            console.warn('[Face++] Error en la comparación:', error);
+                            // On error, let the user see the photo but mark as no Match to be safe,
+                            // or leave as captured to let manual continue? Let's say no match for safety
+                            setState('no_match');
+                            setStatusMessage('Error al verificar identidad');
+                        }
+
                     }, 400);
                 }
             }
@@ -175,10 +253,10 @@ export function useFaceDetection() {
     }, []);
 
     useEffect(() => {
-        if (state === 'captured' || state === 'verified') return;
+        if (['captured', 'verified', 'comparing', 'match', 'no_match'].includes(state)) return;
 
         intervalRef.current = setInterval(async () => {
-            if (isAnalyzing.current || (state as string) === 'captured' || (state as string) === 'verified') return;
+            if (isAnalyzing.current || ['captured', 'verified', 'comparing', 'match', 'no_match'].includes(state as string)) return;
             isAnalyzing.current = true;
             await analyzeFrame();
             isAnalyzing.current = false;

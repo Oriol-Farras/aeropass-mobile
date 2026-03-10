@@ -1,11 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FaceInstructionsScreen() {
     const router = useRouter();
+    const params = useLocalSearchParams();
 
     const InfoRow = ({ icon, title, subtitle }: { icon: keyof typeof MaterialIcons.glyphMap, title: string, subtitle: string }) => (
         <View style={styles.infoRow}>
@@ -67,7 +68,11 @@ export default function FaceInstructionsScreen() {
                 <TouchableOpacity
                     style={styles.button}
                     onPress={() => {
-                        router.push('/face-scan');
+                        console.log("Navigating to face-scan. Passing params:", params ? Object.keys(params) : 'none');
+                        router.push({
+                            pathname: '/face-scan',
+                            params: { dni: params.dni } // Forwarding DNI data
+                        });
                     }}
                 >
                     <Text style={styles.buttonText}>Comenzar escaneo</Text>

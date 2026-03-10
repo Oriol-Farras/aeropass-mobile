@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
+    ActivityIndicator,
     Image,
     StatusBar,
     StyleSheet,
@@ -15,7 +16,11 @@ import { Camera } from 'react-native-vision-camera';
 
 import { useFaceDetection, FaceScanState } from '@/components/scan/useFaceDetection';
 
-export default function FaceScanScreen() {
+interface Props {
+    dniPhoto?: string | null;
+}
+
+export default function FaceScanScreen({ dniPhoto }: Props) {
     const router = useRouter();
     const isFocused = useIsFocused();
     const {
@@ -27,7 +32,7 @@ export default function FaceScanScreen() {
         capturedUri,
         statusMessage,
         reset,
-    } = useFaceDetection();
+    } = useFaceDetection({ dniPhoto });
 
     const getBorderColor = (s: FaceScanState) => {
         switch (s) {
@@ -37,6 +42,9 @@ export default function FaceScanScreen() {
             case 'look_camera': return '#22c55e';
             case 'verified': return '#22c55e';
             case 'captured': return '#22c55e';
+            case 'comparing': return '#3b82f6';
+            case 'match': return '#22c55e';
+            case 'no_match': return '#ef4444';
             default: return '#ffffff40';
         }
     };
@@ -49,6 +57,9 @@ export default function FaceScanScreen() {
             case 'look_camera': return '#22c55e';
             case 'verified': return '#22c55e';
             case 'captured': return '#22c55e';
+            case 'comparing': return '#3b82f6';
+            case 'match': return '#22c55e';
+            case 'no_match': return '#ef4444';
             default: return '#eab308';
         }
     };
@@ -123,12 +134,19 @@ export default function FaceScanScreen() {
                         borderColor: getBorderColor(state),
                     },
                 ]}>
-                    {state === 'captured' && capturedUri ? (
-                        <Image
-                            source={{ uri: capturedUri }}
-                            style={[StyleSheet.absoluteFillObject, { borderRadius: CIRCLE_SIZE / 2 }]}
-                            resizeMode="cover"
-                        />
+                    {['captured', 'comparing', 'match', 'no_match'].includes(state) && capturedUri ? (
+                        <>
+                            <Image
+                                source={{ uri: capturedUri }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: CIRCLE_SIZE / 2 }]}
+                                resizeMode="cover"
+                            />
+                            {state === 'comparing' && (
+                                <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', borderRadius: CIRCLE_SIZE / 2 }]}>
+                                    <ActivityIndicator size="large" color="#ffffff" />
+                                </View>
+                            )}
+                        </>
                     ) : (
                         <Camera
                             ref={cameraRef}
@@ -149,7 +167,7 @@ export default function FaceScanScreen() {
 
             {/* Bottom Actions */}
             <View style={styles.bottomBar}>
-                {state === 'captured' ? (
+                {['captured', 'match', 'no_match'].includes(state) ? (
                     <View style={styles.capturedActions}>
                         <TouchableOpacity style={styles.secondaryButton} onPress={reset}>
                             <MaterialIcons name="refresh" size={20} color="#ffffff" />
@@ -157,7 +175,8 @@ export default function FaceScanScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={styles.primaryButton}
+                            style={[styles.primaryButton, state === 'no_match' && { backgroundColor: '#ef4444', opacity: 0.5 }]}
+                            disabled={state === 'no_match'}
                             onPress={() => {
                                 // Navigate forward or finish flow
                                 router.dismissAll();
