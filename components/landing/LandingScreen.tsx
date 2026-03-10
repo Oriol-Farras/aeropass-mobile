@@ -36,7 +36,7 @@ export default function LandingScreen() {
             <View style={styles.bottom}>
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    onPress={() => router.push('/scan')}
+                    onPress={() => router.push('/dni-instructions')}
                     style={styles.primaryButton}
                 >
                     <Text style={styles.buttonText}>Start Identity Verification</Text>

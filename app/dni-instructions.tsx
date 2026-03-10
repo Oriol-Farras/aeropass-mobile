@@ -1,0 +1,188 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function DniInstructionsScreen() {
+    const router = useRouter();
+
+    const InfoRow = ({ icon, title, subtitle }: { icon: keyof typeof MaterialIcons.glyphMap, title: string, subtitle: string }) => (
+        <View style={styles.infoRow}>
+            <View style={styles.iconContainer}>
+                <MaterialIcons name={icon} size={28} color="#111" />
+            </View>
+            <View style={styles.textContainer}>
+                <Text style={styles.infoTitle}>{title}</Text>
+                <Text style={styles.infoSubtitle}>{subtitle}</Text>
+            </View>
+        </View>
+    );
+
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <MaterialIcons name="arrow-back" size={24} color="#111" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>AEROPASS</Text>
+                <View style={{ width: 40 }} />
+            </View>
+
+            <View style={styles.scrollContent}>
+                {/* Titles */}
+                <Text style={styles.mainTitle}>Prepárate para{'\n'}escanear tu DNI</Text>
+                <Text style={styles.mainSubtitle}>
+                    Sigue estas recomendaciones para una{'\n'}lectura rápida y precisa.
+                </Text>
+
+                {/* List Items */}
+                <View style={styles.listContainer}>
+                    <InfoRow
+                        icon="wb-sunny"
+                        title="Busca buena iluminación"
+                        subtitle="Escanea el documento en un lugar bien iluminado para evitar reflejos y sombras."
+                    />
+                    <View style={styles.separator} />
+                    <InfoRow
+                        icon="credit-card"
+                        title="Usa el DNI físico"
+                        subtitle="Asegúrate de tener el documento original en la mano, sin fundas ni cubiertas."
+                    />
+                    <View style={styles.separator} />
+                    <InfoRow
+                        icon="crop-free"
+                        title="Centra el DNI en pantalla"
+                        subtitle="Mantén el documento dentro del marco y paralelo a la cámara."
+                    />
+                    <View style={styles.separator} />
+                    <InfoRow
+                        icon="do-not-touch"
+                        title="No cubras el texto"
+                        subtitle="Evita tapar con los dedos los números o el chip del documento."
+                    />
+                    <View style={styles.separator} />
+                </View>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => router.push('/scan')}
+                >
+                    <Text style={styles.buttonText}>Comenzar escaneo</Text>
+                </TouchableOpacity>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <MaterialIcons name="lock" size={12} color="#d1d5db" />
+                    <Text style={{ fontSize: 11, color: '#d1d5db', letterSpacing: 0.5 }}>ENCRYPTED &amp; ON-DEVICE</Text>
+                </View>
+            </View>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#ffffff',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 24,
+    },
+    backButton: {
+        padding: 4,
+        marginLeft: -4,
+    },
+    headerTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#111',
+        letterSpacing: 2,
+    },
+    scrollContent: {
+        flex: 1,
+        paddingHorizontal: 28,
+        paddingTop: 12,
+        paddingBottom: 40,
+    },
+    mainTitle: {
+        fontSize: 34,
+        fontWeight: '900',
+        color: '#111',
+        lineHeight: 40,
+        marginBottom: 16,
+        letterSpacing: -0.5,
+    },
+    mainSubtitle: {
+        fontSize: 17,
+        color: '#64748b',
+        lineHeight: 26,
+        marginBottom: 44,
+    },
+    listContainer: {
+        gap: 0,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 24,
+    },
+    iconContainer: {
+        width: 68,
+        height: 68,
+        borderRadius: 34,
+        backgroundColor: '#f8fafc',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 20,
+    },
+    textContainer: {
+        flex: 1,
+    },
+    infoTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#111',
+        marginBottom: 8,
+    },
+    infoSubtitle: {
+        fontSize: 15,
+        color: '#64748b',
+        lineHeight: 22,
+    },
+    separator: {
+        height: 1,
+        backgroundColor: '#f1f5f9',
+        width: '100%',
+    },
+    footer: {
+        paddingHorizontal: 24,
+        paddingBottom: 32,
+        paddingTop: 16,
+        gap: 12,
+        backgroundColor: '#ffffff',
+    },
+    button: {
+        backgroundColor: '#111',
+        borderRadius: 16,
+        paddingVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+});
