@@ -163,6 +163,29 @@ export default function FaceScanScreen({ dniPhoto }: Props) {
                     <View style={[styles.statusDot, { backgroundColor: getStatusDotColor(state) }]} />
                     <Text style={styles.statusText}>{statusMessage}</Text>
                 </View>
+
+                {/* Progress Indicators */}
+                <View style={styles.progressContainer}>
+                    <View style={styles.progressStep}>
+                        <View style={[styles.progressCircle, ['searching', 'detected', 'blink_prompt', 'look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressCircleActive : {}]} />
+                        <Text style={[styles.progressLabel, ['searching', 'detected', 'blink_prompt', 'look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressLabelActive : {}]}>Detectar</Text>
+                    </View>
+                    <View style={[styles.progressLine, ['blink_prompt', 'look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressLineActive : {}]} />
+                    <View style={styles.progressStep}>
+                        <View style={[styles.progressCircle, ['blink_prompt', 'look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressCircleActive : {}]} />
+                        <Text style={[styles.progressLabel, ['blink_prompt', 'look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressLabelActive : {}]}>Parpadeo</Text>
+                    </View>
+                    <View style={[styles.progressLine, ['look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressLineActive : {}]} />
+                    <View style={styles.progressStep}>
+                        <View style={[styles.progressCircle, ['look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressCircleActive : {}]} />
+                        <Text style={[styles.progressLabel, ['look_camera', 'verified', 'captured', 'comparing', 'match', 'no_match'].includes(state) ? styles.progressLabelActive : {}]}>Foto</Text>
+                    </View>
+                    <View style={[styles.progressLine, ['comparing', 'match', 'no_match'].includes(state) ? styles.progressLineActive : {}]} />
+                    <View style={styles.progressStep}>
+                        <View style={[styles.progressCircle, ['comparing', 'match', 'no_match'].includes(state) ? styles.progressCircleActive : {}]} />
+                        <Text style={[styles.progressLabel, ['comparing', 'match', 'no_match'].includes(state) ? styles.progressLabelActive : {}]}>Validar</Text>
+                    </View>
+                </View>
             </View>
 
             {/* Bottom Actions */}
@@ -391,5 +414,49 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#3b82f6',
+    },
+    progressContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 32,
+        paddingHorizontal: 20,
+    },
+    progressStep: {
+        alignItems: 'center',
+        width: 60,
+    },
+    progressCircle: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        marginBottom: 8,
+    },
+    progressCircleActive: {
+        backgroundColor: '#22c55e',
+        shadowColor: '#22c55e',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+    progressLine: {
+        flex: 1,
+        height: 2,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        marginHorizontal: 4,
+        marginTop: -20,
+    },
+    progressLineActive: {
+        backgroundColor: '#22c55e',
+    },
+    progressLabel: {
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.4)',
+        fontWeight: '600',
+    },
+    progressLabelActive: {
+        color: '#ffffff',
     },
 });
