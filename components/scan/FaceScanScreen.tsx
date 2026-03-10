@@ -29,12 +29,12 @@ export default function FaceScanScreen() {
         reset,
     } = useFaceDetection();
 
-    // Border color based on state
     const getBorderColor = (s: FaceScanState) => {
         switch (s) {
             case 'searching': return '#ffffff40';
             case 'detected': return '#22c55e';
             case 'blink_prompt': return '#3b82f6';
+            case 'look_camera': return '#22c55e';
             case 'verified': return '#22c55e';
             case 'captured': return '#22c55e';
             default: return '#ffffff40';
@@ -46,6 +46,7 @@ export default function FaceScanScreen() {
             case 'searching': return '#eab308';
             case 'detected': return '#22c55e';
             case 'blink_prompt': return '#3b82f6';
+            case 'look_camera': return '#22c55e';
             case 'verified': return '#22c55e';
             case 'captured': return '#22c55e';
             default: return '#eab308';
@@ -84,7 +85,7 @@ export default function FaceScanScreen() {
         );
     }
 
-    const CIRCLE_SIZE = 280;
+    const CIRCLE_SIZE = 340;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -173,6 +174,12 @@ export default function FaceScanScreen() {
                             <View style={styles.blinkHint}>
                                 <MaterialIcons name="visibility" size={24} color="#3b82f6" />
                                 <Text style={styles.blinkHintText}>Parpadea ahora</Text>
+                            </View>
+                        )}
+                        {state === 'look_camera' && (
+                            <View style={[styles.blinkHint, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+                                <MaterialIcons name="camera-alt" size={24} color="#22c55e" />
+                                <Text style={[styles.blinkHintText, { color: '#22c55e' }]}>Mira a la cámara</Text>
                             </View>
                         )}
                     </View>

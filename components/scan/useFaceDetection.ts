@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import FaceDetection from '@react-native-ml-kit/face-detection';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
-export type FaceScanState = 'searching' | 'detected' | 'blink_prompt' | 'verified' | 'captured';
+export type FaceScanState = 'searching' | 'detected' | 'blink_prompt' | 'look_camera' | 'verified' | 'captured';
 
 export function useFaceDetection() {
     const { hasPermission, requestPermission } = useCameraPermission();
@@ -18,6 +18,7 @@ export function useFaceDetection() {
 
     // Blink tracking: need eyes-closed → eyes-open transition
     const eyesWereClosed = useRef(false);
+    const isBlinkValidated = useRef(false);
     // How many consecutive frames the face has been well-centered
     const stableFrames = useRef(0);
     const STABLE_THRESHOLD = 3; // frames needed before prompting blink
@@ -45,6 +46,7 @@ export function useFaceDetection() {
             if (faces.length === 0) {
                 stableFrames.current = 0;
                 eyesWereClosed.current = false;
+                isBlinkValidated.current = false;
                 setState('searching');
                 setStatusMessage('Buscando rostro...');
                 return;
@@ -69,6 +71,7 @@ export function useFaceDetection() {
             if (!isWellFramed) {
                 stableFrames.current = 0;
                 eyesWereClosed.current = false;
+                isBlinkValidated.current = false;
 
                 if (faceRatio < 0.20) {
                     setState('searching');
@@ -103,35 +106,58 @@ export function useFaceDetection() {
             const eyesClosed = leftEye < 0.3 && rightEye < 0.3;
             const eyesOpen = leftEye > 0.6 && rightEye > 0.6;
 
-            if (eyesClosed) {
+            if (eyesClosed && !isBlinkValidated.current) {
                 eyesWereClosed.current = true;
             }
 
-            if (eyesWereClosed.current && eyesOpen) {
-                // Blink confirmed! Take the verified photo
-                eyesWereClosed.current = false;
-                setState('verified');
-                setStatusMessage('¡Verificación completada!');
+            if (!isBlinkValidated.current) {
+                if (eyesWereClosed.current && eyesOpen) {
+                    // Blink confirmed! Wait for them to look at the camera
+                    isBlinkValidated.current = true;
+                    eyesWereClosed.current = false;
+                    setState('look_camera');
+                    setStatusMessage('Mira fijamente a la cámara');
+                    return;
+                }
+            } else {
+                setState('look_camera');
+                setStatusMessage('Mira fijamente a la cámara');
 
-                // Small delay so the user sees "verified" before capture
-                setTimeout(async () => {
-                    try {
-                        const finalPhoto = await cameraRef.current?.takePhoto({
-                            flash: 'off',
-                            enableShutterSound: false,
-                        });
-                        if (finalPhoto?.path) {
-                            setCapturedUri(`file://${finalPhoto.path}`);
+                // Check if user is looking at the camera
+                const yaw = face.rotationY ?? 0;
+                const pitch = face.rotationX ?? 0;
+
+                // Allow a small margin of error for looking straight
+                const isLookingStraight = Math.abs(yaw) < 12 && Math.abs(pitch) < 12;
+
+                if (isLookingStraight && eyesOpen) {
+                    // Verification complete!
+                    setState('verified');
+                    setStatusMessage('¡Verificación completada!');
+
+                    // We need to stop further calls until captured
+                    isBlinkValidated.current = false;
+
+                    // Small delay so the user sees "verified" before capture
+                    setTimeout(async () => {
+                        try {
+                            const finalPhoto = await cameraRef.current?.takePhoto({
+                                flash: 'off',
+                                enableShutterSound: false,
+                            });
+                            if (finalPhoto?.path) {
+                                setCapturedUri(`file://${finalPhoto.path}`);
+                                setState('captured');
+                                setStatusMessage('¡Foto capturada!');
+                            }
+                        } catch {
+                            // Fallback: use the analysis photo
+                            setCapturedUri(uri);
                             setState('captured');
                             setStatusMessage('¡Foto capturada!');
                         }
-                    } catch {
-                        // Fallback: use the analysis photo
-                        setCapturedUri(uri);
-                        setState('captured');
-                        setStatusMessage('¡Foto capturada!');
-                    }
-                }, 400);
+                    }, 400);
+                }
             }
         } catch (e: any) {
             const errMsg = e?.message || String(e);
@@ -169,6 +195,7 @@ export function useFaceDetection() {
         setStatusMessage('Buscando rostro...');
         stableFrames.current = 0;
         eyesWereClosed.current = false;
+        isBlinkValidated.current = false;
     }, []);
 
     return {
