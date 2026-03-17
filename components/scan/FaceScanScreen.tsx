@@ -32,6 +32,7 @@ export default function FaceScanScreen({ dni }: Props) {
         state,
         capturedUri,
         statusMessage,
+        usuarioId,
         reset,
     } = useFaceDetection({ dniPhoto: dni?.photo ?? null, dni });
 
@@ -204,7 +205,11 @@ export default function FaceScanScreen({ dni }: Props) {
                             onPress={() => {
                                 // Navigate forward or finish flow
                                 router.dismissAll();
-                                router.replace('/(tabs)');
+                                if (usuarioId) {
+                                    router.replace({ pathname: '/dashboard', params: { usuarioId } });
+                                } else {
+                                    router.replace('/(tabs)');
+                                }
                             }}
                         >
                             <MaterialIcons name="check" size={20} color="#ffffff" />

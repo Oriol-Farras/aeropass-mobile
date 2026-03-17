@@ -19,6 +19,7 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
     const [state, setState] = useState<FaceScanState>('searching');
     const [capturedUri, setCapturedUri] = useState<string | null>(null);
     const [statusMessage, setStatusMessage] = useState('Buscando rostro...');
+    const [usuarioId, setUsuarioId] = useState<string | null>(null);
 
     const isAnalyzing = useRef(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -254,6 +255,9 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
 
                                         await crearPaseAbordaje(usuario.id, 'VUELO-IB3042');
 
+                                        // Save id to state for navigation later
+                                        setUsuarioId(usuario.id);
+
                                         if (esNuevo) {
                                             console.log('[Supabase] 🆕 Nuevo usuario y pase creados.');
                                         } else {
@@ -319,6 +323,7 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
         setState('searching');
         setCapturedUri(null);
         setStatusMessage('Buscando rostro...');
+        setUsuarioId(null);
         stableFrames.current = 0;
         eyesWereClosed.current = false;
         isBlinkValidated.current = false;
@@ -332,6 +337,7 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
         state,
         capturedUri,
         statusMessage,
+        usuarioId,
         reset,
     };
 }

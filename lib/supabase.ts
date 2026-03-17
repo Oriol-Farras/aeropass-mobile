@@ -25,6 +25,7 @@ export interface PaseCreado {
     usuario_id: string;
     referencia_vuelo: string;
     usado: boolean;
+    biometria_activada: boolean;
     fecha_creacion: string;
 }
 
@@ -117,4 +118,57 @@ export async function crearPaseAbordaje(
 
     console.log('[Supabase] ✅ Pase creado:', data.id_pase);
     return data as PaseCreado;
+}
+
+// ── Obtener último pase del usuario ─────────────────────────────────
+export interface PaseConUsuario {
+    id_pase: string;
+    usuario_id: string;
+    referencia_vuelo: string;
+    usado: boolean;
+    biometria_activada: boolean;
+    fecha_creacion: string;
+    usuarios: {
+        id: string;
+        dni: string;
+        nombre_completo: string;
+    };
+}
+
+export async function obtenerUltimoPase(usuarioId: string): Promise<PaseConUsuario | null> {
+    const { data, error } = await supabase
+        .from('pases')
+        .select('*, usuarios(id, dni, nombre_completo)')
+        .eq('usuario_id', usuarioId)
+        .order('fecha_creacion', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        console.error('[Supabase] Error al obtener pase:', error.code, error.message);
+        return null;
+    }
+
+    return data as PaseConUsuario | null;
+}
+
+// ── Toggle biometría activada ───────────────────────────────────────
+export async function toggleBiometriaActivada(
+    paseId: string,
+    valor: boolean,
+): Promise<boolean> {
+    console.log(`[Supabase] Toggle biometría: ${valor} para pase ${paseId}`);
+
+    const { error } = await supabase
+        .from('pases')
+        .update({ biometria_activada: valor })
+        .eq('id_pase', paseId);
+
+    if (error) {
+        console.error('[Supabase] Error al actualizar biometría:', error.code, error.message);
+        return false;
+    }
+
+    console.log('[Supabase] ✅ Biometría actualizada:', valor);
+    return true;
 }
