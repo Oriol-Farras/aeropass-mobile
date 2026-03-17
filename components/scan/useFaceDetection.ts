@@ -246,7 +246,7 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
                                         setState('comparing');
                                         setStatusMessage('Guardando en base de datos…');
 
-                                        const usuario = await registrarUsuarioCompleto(
+                                        const { usuario, esNuevo } = await registrarUsuarioCompleto(
                                             currentDni.number,
                                             nombreCompleto,
                                             faceToken,
@@ -254,9 +254,15 @@ export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) 
 
                                         await crearPaseAbordaje(usuario.id, 'VUELO-IB3042');
 
-                                        console.log('[Supabase] ✅ Usuario y pase guardados correctamente.');
-                                    } catch (dbError) {
-                                        console.warn('[Supabase] ⚠️  Error al guardar en BD (el match sigue siendo válido):', dbError);
+                                        if (esNuevo) {
+                                            console.log('[Supabase] 🆕 Nuevo usuario y pase creados.');
+                                        } else {
+                                            console.log('[Supabase] 🔄 Usuario recurrente: datos actualizados, nuevo pase creado.');
+                                        }
+                                    } catch (dbError: any) {
+                                        const code = dbError?.code || 'UNKNOWN';
+                                        const msg = dbError?.message || String(dbError);
+                                        console.warn(`[Supabase] ⚠️  Error BD [${code}]: ${msg}`);
                                     }
                                 } else {
                                     console.log('[Supabase] Saltando registro: no hay datos de DNI disponibles.');

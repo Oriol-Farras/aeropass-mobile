@@ -28,19 +28,40 @@ export interface PaseCreado {
     fecha_creacion: string;
 }
 
+// ── Resultado del registro ───────────────────────────────────────────
+export interface ResultadoRegistro {
+    usuario: UsuarioRegistrado;
+    esNuevo: boolean;
+}
+
 // ── Registrar usuario completo ──────────────────────────────────────
 /**
  * Inserta (o actualiza si ya existe por DNI) un usuario verificado.
- * Devuelve el objeto usuario con su UUID.
+ * Devuelve el objeto usuario y un flag `esNuevo` que indica si es
+ * un registro nuevo o un usuario recurrente.
  */
 export async function registrarUsuarioCompleto(
     dniNumero: string,
     nombreCompleto: string,
     faceToken: string | null,
-): Promise<UsuarioRegistrado> {
+): Promise<ResultadoRegistro> {
     console.log('[Supabase] Registrando usuario…', { dniNumero, nombreCompleto });
 
-    // Intentar insertar. Si ya existe (conflict en "dni"), actualiza.
+    // 1. Comprobar si el usuario ya existe
+    const { data: existente, error: selectError } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('dni', dniNumero)
+        .maybeSingle();
+
+    if (selectError) {
+        console.error('[Supabase] Error al buscar usuario existente:', selectError.code, selectError.message);
+        throw selectError;
+    }
+
+    const esNuevo = !existente;
+
+    // 2. Upsert: insertar si es nuevo, actualizar si ya existe
     const { data, error } = await supabase
         .from('usuarios')
         .upsert(
@@ -56,12 +77,17 @@ export async function registrarUsuarioCompleto(
         .single();
 
     if (error) {
-        console.error('[Supabase] Error al registrar usuario:', error.message);
+        console.error('[Supabase] Error al registrar usuario:', error.code, error.message);
         throw error;
     }
 
-    console.log('[Supabase] ✅ Usuario registrado/actualizado:', data.id);
-    return data as UsuarioRegistrado;
+    if (esNuevo) {
+        console.log('[Supabase] 🆕 Nuevo usuario registrado:', data.id);
+    } else {
+        console.log('[Supabase] 🔄 Usuario recurrente actualizado:', data.id);
+    }
+
+    return { usuario: data as UsuarioRegistrado, esNuevo };
 }
 
 // ── Crear pase de abordaje ──────────────────────────────────────────
