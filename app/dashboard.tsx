@@ -1,10 +1,16 @@
 import React from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import DashboardScreen from '@/components/dashboard/DashboardScreen';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
 export default function DashboardRoute() {
-    const params = useLocalSearchParams();
-    const { usuarioId } = params;
+  const params = useLocalSearchParams<{ usuarioId?: string }>();
+  const userId = typeof params.usuarioId === 'string' ? params.usuarioId : undefined;
 
-    return <DashboardScreen usuarioId={usuarioId as string} />;
+  return (
+    <Redirect
+      href={{
+        pathname: '/(tabs)',
+        params: userId ? { usuarioId: userId } : {},
+      }}
+    />
+  );
 }

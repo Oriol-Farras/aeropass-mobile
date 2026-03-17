@@ -208,7 +208,7 @@ export default function FaceScanScreen({ dni }: Props) {
                                 if (usuarioId) {
                                     router.replace({ pathname: '/dashboard', params: { usuarioId } });
                                 } else {
-                                    router.replace('/(tabs)');
+                                    router.replace('/dashboard');
                                 }
                             }}
                         >
