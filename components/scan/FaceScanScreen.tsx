@@ -15,12 +15,13 @@ import { useIsFocused } from '@react-navigation/native';
 import { Camera } from 'react-native-vision-camera';
 
 import { useFaceDetection, FaceScanState } from '@/components/scan/useFaceDetection';
+import { DNIData } from '@/components/scan/DNIResultScreen';
 
 interface Props {
-    dniPhoto?: string | null;
+    dni?: DNIData | null;
 }
 
-export default function FaceScanScreen({ dniPhoto }: Props) {
+export default function FaceScanScreen({ dni }: Props) {
     const router = useRouter();
     const isFocused = useIsFocused();
     const {
@@ -32,7 +33,7 @@ export default function FaceScanScreen({ dniPhoto }: Props) {
         capturedUri,
         statusMessage,
         reset,
-    } = useFaceDetection({ dniPhoto });
+    } = useFaceDetection({ dniPhoto: dni?.photo ?? null, dni });
 
     const getBorderColor = (s: FaceScanState) => {
         switch (s) {

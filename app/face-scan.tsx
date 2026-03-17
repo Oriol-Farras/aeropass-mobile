@@ -18,5 +18,5 @@ export default function FaceScan() {
         console.error("Failed to parse DNI params in face scan");
     }
 
-    return <FaceScanScreen dniPhoto={dni?.photo || null} />;
+    return <FaceScanScreen dni={dni} />;
 }

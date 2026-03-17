@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FaceDetection from '@react-native-ml-kit/face-detection';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { registrarUsuarioCompleto, crearPaseAbordaje } from '@/lib/supabase';
+import type { DNIData } from '@/components/scan/DNIResultScreen';
 
 export type FaceScanState = 'searching' | 'detected' | 'blink_prompt' | 'look_camera' | 'verified' | 'captured' | 'comparing' | 'match' | 'no_match';
 
 interface UseFaceDetectionProps {
     dniPhoto?: string | null;
+    dni?: DNIData | null;
 }
 
-export function useFaceDetection({ dniPhoto }: UseFaceDetectionProps = {}) {
+export function useFaceDetection({ dniPhoto, dni }: UseFaceDetectionProps = {}) {
     const { hasPermission, requestPermission } = useCameraPermission();
     const cameraRef = useRef<Camera>(null);
     const device = useCameraDevice('front');
@@ -24,6 +27,11 @@ export function useFaceDetection({ dniPhoto }: UseFaceDetectionProps = {}) {
     useEffect(() => {
         dniPhotoRef.current = dniPhoto;
     }, [dniPhoto]);
+
+    const dniRef = useRef(dni);
+    useEffect(() => {
+        dniRef.current = dni;
+    }, [dni]);
 
     // Blink tracking: need eyes-closed → eyes-open transition
     const eyesWereClosed = useRef(false);
@@ -220,6 +228,40 @@ export function useFaceDetection({ dniPhoto }: UseFaceDetectionProps = {}) {
 
                             if (confidence >= threshold) {
                                 console.log('[Face++] ✅ ¡Identidad verificada! Match exitoso.');
+
+                                // ── Guardar en Supabase ──
+                                const currentDni = dniRef.current;
+                                if (currentDni && currentDni.number) {
+                                    try {
+                                        const nombreCompleto = [
+                                            currentDni.name,
+                                            currentDni.surname1,
+                                            currentDni.surname2,
+                                        ].filter(Boolean).join(' ');
+
+                                        const faceToken = result.faces1?.[0]?.face_token
+                                            || result.request_id
+                                            || null;
+
+                                        setState('comparing');
+                                        setStatusMessage('Guardando en base de datos…');
+
+                                        const usuario = await registrarUsuarioCompleto(
+                                            currentDni.number,
+                                            nombreCompleto,
+                                            faceToken,
+                                        );
+
+                                        await crearPaseAbordaje(usuario.id, 'VUELO-IB3042');
+
+                                        console.log('[Supabase] ✅ Usuario y pase guardados correctamente.');
+                                    } catch (dbError) {
+                                        console.warn('[Supabase] ⚠️  Error al guardar en BD (el match sigue siendo válido):', dbError);
+                                    }
+                                } else {
+                                    console.log('[Supabase] Saltando registro: no hay datos de DNI disponibles.');
+                                }
+
                                 setState('match');
                                 setStatusMessage('¡Identidad verificada!');
                             } else {
