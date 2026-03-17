@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Switch, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ActivityIndicator, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { obtenerUltimoPase, toggleBiometriaActivada, PaseConUsuario } from '@/lib/supabase';
 
@@ -71,7 +72,7 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
                 <View style={styles.cardTop}>
                     <View style={styles.badge}>
                         <View style={styles.badgeDot} />
-                        <Text style={styles.badgeText}>On Time</Text>
+                        <Text style={styles.badgeText}>En hora</Text>
                     </View>
                     <MaterialIcons name="qr-code-2" size={24} color="#ffffff" />
                 </View>
@@ -90,7 +91,7 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
 
                     <View style={[styles.destBox, { alignItems: 'flex-end' }]}>
                         <Text style={styles.destCode}>JFK</Text>
-                        <Text style={styles.destName}>New York</Text>
+                        <Text style={styles.destName}>Nueva York</Text>
                     </View>
                 </View>
 
@@ -100,26 +101,26 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
 
                 <View style={styles.detailsRow}>
                     <View style={styles.detailBox}>
-                        <Text style={styles.detailLabel}>FLIGHT</Text>
+                        <Text style={styles.detailLabel}>VUELO</Text>
                         <Text style={styles.detailValue}>{vuelo}</Text>
                     </View>
                     <View style={styles.detailBox}>
-                        <Text style={styles.detailLabel}>GATE</Text>
+                        <Text style={styles.detailLabel}>PUERTA</Text>
                         <Text style={styles.detailValue}>B14</Text>
                     </View>
                     <View style={styles.detailBox}>
-                        <Text style={styles.detailLabel}>SEAT</Text>
+                        <Text style={styles.detailLabel}>ASIENTO</Text>
                         <Text style={styles.detailValue}>12B</Text>
                     </View>
                     <View style={styles.detailBox}>
-                        <Text style={styles.detailLabel}>BOARDING</Text>
+                        <Text style={styles.detailLabel}>EMBARQUE</Text>
                         <Text style={styles.detailValue}>14:30</Text>
                     </View>
                 </View>
             </View>
 
-            {/* Next Steps */}
-            <Text style={styles.sectionTitle}>Next Steps</Text>
+            {/* Próximos pasos */}
+            <Text style={styles.sectionTitle}>Próximos pasos</Text>
 
             <View style={styles.stepsContainer}>
                 <View style={styles.stepRow}>
@@ -127,8 +128,8 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
                         <MaterialIcons name="check-circle" size={24} color="#16a34a" />
                     </View>
                     <View style={styles.stepContent}>
-                        <Text style={styles.stepTitle}>Check-in Complete</Text>
-                        <Text style={styles.stepSubtitle}>Documents verified</Text>
+                        <Text style={styles.stepTitle}>Check-in completado</Text>
+                        <Text style={styles.stepSubtitle}>Documentos verificados</Text>
                     </View>
                 </View>
 
@@ -139,11 +140,11 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
                         <MaterialIcons name="face" size={24} color="#3b82f6" />
                     </View>
                     <View style={styles.stepContent}>
-                        <Text style={styles.stepTitle}>Biometric Boarding Active</Text>
-                        <Text style={styles.stepSubtitle}>Proceed to automated lanes</Text>
+                        <Text style={styles.stepTitle}>Embarque biométrico activo</Text>
+                        <Text style={styles.stepSubtitle}>Dirígete a las puertas automáticas</Text>
                     </View>
                     <View style={styles.liveBadge}>
-                        <Text style={styles.liveText}>LIVE</Text>
+                        <Text style={styles.liveText}>ACTIVO</Text>
                     </View>
                 </View>
             </View>
@@ -154,8 +155,8 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
                     <MaterialIcons name="lock-open" size={24} color="#4b5563" />
                 </View>
                 <View style={styles.toggleContent}>
-                    <Text style={styles.toggleTitle}>Gate Access</Text>
-                    <Text style={styles.toggleSubtitle}>Enable biometric entry</Text>
+                    <Text style={styles.toggleTitle}>Acceso a puerta</Text>
+                    <Text style={styles.toggleSubtitle}>Habilitar entrada biométrica</Text>
                 </View>
                 <Switch
                     value={biometricEnabled}
@@ -173,15 +174,15 @@ export default function DashboardScreen({ usuarioId }: { usuarioId: string }) {
             <View style={styles.tabBar}>
                 <View style={styles.tabItem}>
                     <MaterialIcons name="home" size={28} color="#111" />
-                    <Text style={[styles.tabText, { color: '#111' }]}>Home</Text>
+                    <Text style={[styles.tabText, { color: '#111' }]}>Inicio</Text>
                 </View>
                 <View style={styles.tabItem}>
                     <MaterialIcons name="account-balance-wallet" size={28} color="#9ca3af" />
-                    <Text style={styles.tabText}>Wallet</Text>
+                    <Text style={styles.tabText}>Cartera</Text>
                 </View>
                 <View style={styles.tabItem}>
                     <MaterialIcons name="person" size={28} color="#9ca3af" />
-                    <Text style={styles.tabText}>Profile</Text>
+                    <Text style={styles.tabText}>Perfil</Text>
                 </View>
             </View>
         </SafeAreaView>
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 24,
-        paddingTop: 16,
+        paddingTop: 8,
         paddingBottom: 20,
     },
     logoContainer: {
